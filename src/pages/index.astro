@@ -1,0 +1,51 @@
+        ---
+        import Layout from '../layouts/Layout.astro';
+        import Card from '../components/Card.astro'; // Создадим его сейчас
+
+        import { getCollection } from 'astro:content';
+
+        const products = await getCollection('products');
+        ---
+
+        <Layout title="Магазин Качество">
+          <main>
+            <h1>Добро пожаловать в наш магазин!</h1>
+            <p>Здесь вы найдете лучшие товары.</p>
+
+            <div class="product-grid">
+              {products.map(product => (
+                <Card
+                  href={`/products/${product.slug}`}
+                  title={product.data.title}
+                  body={product.data.description}
+                  priceRub={product.data.price_rub}
+                  priceUsd={product.data.price_usd}
+                  image={product.data.image}
+                />
+              ))}
+            </div>
+          </main>
+        </Layout>
+
+        <style>
+          main {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            color: white;
+          }
+          h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+          }
+          p {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 2rem;
+          }
+          .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+          }
+        </style>
