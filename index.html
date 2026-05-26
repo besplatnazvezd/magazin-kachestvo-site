@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark" data-skin="cyberpunk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS STORE |super|</title>
+
+    <!-- Подключаемые библиотеки -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <style>
+        :root[data-theme="dark"] {
+            --bg-app: #050505;
+            --card-app: #111111;
+            --text-main: #ffffff;
+            --border-app: rgba(255, 255, 255, 0.08);
+            --accent-color: #00f2ff;
+            --accent-glow-color: rgba(0, 242, 255, 0.25);
+        }
+        :root[data-theme="light"] {
+            --bg-app: #f3f4f6;
+            --card-app: #ffffff;
+            --text-main: #111111;
+            --border-app: rgba(0, 0, 0, 0.08);
+            --accent-color: #0ea5e9;
+            --accent-glow-color: rgba(14, 165, 233, 0.2);
+        }
+        :root[data-skin="winter"] {
+            --accent-color: #38bdf8;
+            --accent-glow-color: rgba(56, 189, 248, 0.3);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+            outline: none;
+        }
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding-bottom: 120px;
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+        .font-orb {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Дизайн уникальной BOSS CARD */
+        .boss-card {
+            background: linear-gradient(135deg, #141414 0%, #000000 100%);
+            border: 2px solid var(--accent-color);
+            border-radius: 28px;
+            padding: 24px;
+            position: relative;
+                      overflow: hidden;
+            box-shadow: 0 12px 40px var(--accent-glow-color);
+        }
+        .boss-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--accent-color), transparent);
+            animation: card-rotate 12s linear infinite;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+        @keyframes card-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Анимированные рамки аватарок */
+        .avatar-frame {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            padding: 4px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .frame-gold {
+            background: linear-gradient(45deg, #ffd700, #fffdd0, #b45309, #ffd700);
+            background-size: 300%;
+            animation: gold-flow-effect 4s ease infinite;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+        @keyframes gold-flow-effect {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Навигация */
+        .nav-menu {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 420px;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-app);
+            border-radius: 26px;
+            display: flex;
+            justify-content: space-around;
+            padding: 14px;
+            z-index: 1000;
+        }
+        .nav-item {
+            font-size: 22px;
+            color: #4b5563;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            padding: 4px 12px;
+        }
+        .nav-item.active {
+            color: var(--accent-color);
+            transform: translateY(-4px) scale(1.1);
+        }
+
+        /* Виды разделов */
+        .app-view {
+            display: none;
+            animation: viewFadeIn 0.4s ease forwards;
+                  }
+        .app-view.active {
+            display: block;
+        }
+        @keyframes viewFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-main {
+            background: var(--accent-color);
+            color: #000000;
+            font-weight: 800;
+            border-radius: 18px;
+            padding: 16px;
+            width: 100%;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.05em;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-main:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Всплывающие уведомления (Toast) -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-2xl bg-white text-black font-extrabold text-xs shadow-2xl hidden animate__animated"></div>
+
+    <div id="app" class="max-w-md mx-auto px-5 pt-6">
+        
+        <!-- Шапка -->
+        <header class="flex justify-between items-center mb-6">
+            <div onclick="App.secretTap()" class="cursor-pointer">
+                <p id="greet" class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Загрузка...</p>
+                <h1 class="text-2xl font-black font-orb">BOSS<span class="text-cyan-400">STORE</span></h1>
+                </div>
+            <div class="flex gap-2">
+                <button onclick="UI.toggleSkin()" class="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-sm">🎭</button>
+                <button onclick="UI.toggleTheme()" id="theme-icon" class="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-sm">🌙</button>
+                <button id="cart-btn" onclick="UI.openCart()" class="relative w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-sm z-50">
+                    🛒<span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-[9px] w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Живая лента -->
+        <div class="bg-white/5 rounded-2xl p-3.5 mb-6 border border-white/5 flex items-center gap-3 overflow-hidden">
+            <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></div>
+            <div id="live-feed" class="text-[9px] font-black text-gray-400 uppercase tracking-wide truncate">Ожидание транзакций...</div>
+        </div>
+
+        <!-- ВКЛАДКА: МАГАЗИН (ГЛАВНАЯ) -->
+        <main id="view-home" class="app-view active">
+            <!-- Уникальная Boss Card без прогресс-бара -->
+            <div class="boss-card mb-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div id="user-title" class="text-[9px] bg-cyan-400 text-black px-2.5 py-1 rounded-md font-black uppercase mb-2 inline-block">Новичок</div>
+                        <h2 id="user-name" class="text-xl font-black font-orb text-white truncate max-w-[160px]">USER</h2>
+                        <p id="user-id-display" class="text-[9px] text-gray-500 mt-2 font-mono">ID: 00000000</p>
+                    </div>
+                    <div id="avatar-container" class="avatar-frame flex items-center justify-center">
+                        <img id="user-avatar" src="https://ui-avatars.com/api/?name=B" class="w-full h-full rounded-full object-cover">
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
+                    <span class="text-[10px] text-gray-500 font-extrabold uppercase">Оборот покупок</span>
+                    <span id="user-spent" class="font-orb text-sm font-black text-cyan-400">0.00 ₽</span>
+                </div>
+            </div>
+
+            <!-- Flash Sale -->
+            <div class="bg-gradient-to-r from-indigo-950 to-purple-950 rounded-3xl p-4 mb-6 border border-indigo-500/30 flex justify-between items-center">
+                <div>
+                    <p class="text-[9px] font-black text-indigo-400 uppercase tracking-wider mb-0.5">Flash Sale -4%</p>
+                    <p id="timer-status" class="text-[10px] font-bold text-white uppercase">До начала:</p>
+                </div>
+                <div id="timer-clock" class="font-orb text-xl font-black text-white">12:00:00</div>
+            </div>
+
+            <!-- Рекомендуемые услуги -->
+            <h3 class="text-xs font-black uppercase mb-3 ml-1 tracking-wider text-gray-400">Рекомендуемые услуги</h3>
+            <div id="rec-products" class="flex gap-3 overflow-x-auto no-scrollbar mb-6 pb-2"></div>
+
+            <!-- Поиск и категории -->
+            <input type="text" id="search" oninput="App.renderProducts()" placeholder="Поиск премиум услуг..." class="w-full bg-white/5 border border-white/5 rounded-2xl p-4 text-sm mb-4 outline-none focus:border-cyan-400 transition-all text-white">
+            <div id="cats" class="flex gap-2 overflow-x-auto no-scrollbar mb-6"></div>
+
+            <!-- Сетка товаров -->
+            <div id="products-grid" class="grid grid-cols-2 gap-4"></div>
+
+            <!-- Инструкция -->
+            <div class="mt-8 bg-white/5 rounded-3xl p-6 border border-white/5">
+                <h3 class="font-orb font-black text-sm mb-2 text-cyan-400">ИНСТРУКЦИЯ ПО УСЛУГАМ</h3>
+                <p class="text-[10px] text-gray-500 mb-4 leading-relaxed uppercase font-bold">Ознакомьтесь с подробными правилами и описанием каждой услуги, чтобы ваш заказ был выполнен максимально быстро.</p>
+                <a href="https://promo-art.vercel.app/" class="text-[10px] font-black uppercase text-white underline tracking-widest">Открыть инструкцию</a>
+            </div>
+
+            <!-- Отзывы -->
+            <div class="mt-6 p-6 bg-white/5 rounded-3xl text-center border border-white/5">
+                <div class="text-yellow-400 text-lg mb-1">⭐⭐⭐⭐⭐</div>
+                <p class="text-xl font-black font-orb text-white">4.9 / 5</p>
+                <p class="text-[9px] text-gray-500 uppercase font-bold tracking-widest">на основе 500+ отзывов</p>
+            </div>
+        </main>
+
+        <!-- ВКЛАДКА: СИМУЛЯТОР (Вместо игры) -->
+        <section id="view-game" class="app-view">
+            <h2 class="text-2xl font-black font-orb text-center mt-8 mb-2 text-cyan-400">СИМУЛЯТОР ТРАТ</h2>
+            <p class="text-[9px] text-gray-500 font-extrabold uppercase text-center mb-8">Сможешь потратить $839 млрд за 10 минут?</p>
+            
+            <!-- Интегрированная игра-кликер -->
+            <div class="bg-white/5 rounded-[32px] p-6 border border-white/5 mb-6 text-center">
+                <div class="text-[10px] font-black text-gray-500 uppercase mb-2">Ваш баланс</div>
+                <div id="sim-balance" class="font-orb text-2xl font-black text-green-400 mb-6">$839,000,000,000</div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button onclick="App.simBuy(150000000000, 'МКС Станцию')" class="bg-white/5 hover:bg-white/10 p-4 rounded-2xl text-left border border-white/5 transition-all">
+                        <p class="text-[9px] text-gray-500 font-bold uppercase">Купить МКС</p>
+                        <p class="text-[10px] font-black text-white">$150 млрд</p>
+                    </button>
+                    <button onclick="App.simBuy(5000000000, 'ФК Челси')" class="bg-white/5 hover:bg-white/10 p-4 rounded-2xl text-left border border-white/5 transition-all">
+                        <p class="text-[9px] text-gray-500 font-bold uppercase">Купить ФК</p>
+                        <p class="text-[10px] font-black text-white">$5 млрд</p>
+                    </button>
+                    <button onclick="App.simBuy(2000000000, 'Личный Остров')" class="bg-white/5 hover:bg-white/10 p-4 rounded-2xl text-left border border-white/5 transition-all">
+                        <p class="text-[9px] text-gray-500 font-bold uppercase">Купить Остров</p>
+                        <p class="text-[10px] font-black text-white">$2 млрд</p>
+                    </button>
+                    <button onclick="App.simBuy(800000000, 'Суперъяхту')" class="bg-white/5 hover:bg-white/10 p-4 rounded-2xl text-left border border-white/5 transition-all">
+                        <p class="text-[9px] text-gray-500 font-bold uppercase">Яхту BOSS</p>
+                        <p class="text-[10px] font-black text-white">$800 млн</p>
+                    </button>
+                </div>
+                
+                <button onclick="App.resetSim()" class="text-[8px] font-black text-gray-500 uppercase tracking-widest unde
+                  rline">Сбросить баланс</button>
+            </div>
+
+            <div class="bg-gradient-to-r from-cyan-950 to-blue-950 p-6 rounded-3xl border border-cyan-500/20 text-center mb-8">
+                <p class="text-xs font-black text-white uppercase mb-2">Оригинальная Веб-игра</p>
+                <p class="text-[9px] text-gray-400 uppercase font-bold mb-4 leading-relaxed">Попробуйте сыграть в полную версию симулятора трат на большом экране</p>
+                <a href="https://neal.fun/spend-bill-gates-money/" target="_blank" class="block btn-main text-center">Играть на внешнем сайте</a>
+            </div>
+        </section>
+
+        <!-- ВКЛАДКА: ПРОФИЛЬ -->
+        <section id="view-profile" class="app-view">
+            <h2 class="text-2xl font-black font-orb text-center mt-8 mb-6 uppercase">Профиль клиента</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white/5 p-5 rounded-3xl border border-white/5 text-center">
+                    <p class="text-[9px] text-gray-500 font-bold uppercase mb-1">Рефералы</p>
+                    <p id="stat-refs" class="text-xl font-black font-orb">0</p>
+                </div>
+                <div class="bg-white/5 p-5 rounded-3xl border border-white/5 text-center">
+                    <p class="text-[9px] text-gray-500 font-bold uppercase mb-1">Скидка</p>
+                    <p id="stat-discount" class="text-xl font-black font-orb">0%</p>
+                </div>
+            </div>
+
+            <!-- Рефералка -->
+            <div class="bg-cyan-400/5 border border-dashed border-cyan-400/30 p-6 rounded-3xl mb-8">
+                <p class="text-xs font-black uppercase text-center mb-2">Пригласи друга</p>
+                <p class="text-[9px] text-gray-500 text-center uppercase mb-4">Вы оба получите по 3% скидки на заказ</p>
+                <div id="ref-link" onclick="App.copyRef()" class="bg-black/50 p-3 rounded-xl text-[9px] font-mono text-cyan-400 break-all text-center border border-white/5 cursor-pointer">Загрузка реферальной ссылки...</div>
+            </div>
+
+            <!-- Лидерборд -->
+            <h3 class="text-xs font-black uppercase mb-4 ml-1">Доска лидеров</h3>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <p class="text-[8px] text-pink-500 font-bold uppercase mb-3">Топ рефералов</p>
+                    <div id="leader-refs" class="space-y-2 text-[9px] font-mono"></div>
+                </div>
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <p class="text-[8px] text-cyan-500 font-bold uppercase mb-3">Топ покупок</p>
+                    <div id="leader-spent" class="space-y-2 text-[9px] font-mono"></div>
+                </div>
+            </div>
+
+            <!-- История покупок -->
+            <h3 class="text-xs font-black uppercase mb-4 ml-1">Мои покупки</h3>
+            <div id="order-history" class="space-y-3 mb-10"></div>
+        </section>
+
+        <!-- ВКЛАДКА: ПОДДЕРЖКА И FAQ -->
+        <section id="view-support" class="app-view">
+            <div class="bg-white/5 p-8 rounded-[40px] text-center border border-white/5 mt-8">
+                <h3 class="font-orb font-black text-xl mb-4">ПОДДЕРЖКА</h3>
+                <p class="text-[10px] text-gray-500 uppercase mb-8 leading-relaxed">Возникли вопросы? Наша команда на связи 24/7 для решения любых вопросов</p>
+                <div class="space-y-3">
+                    <a href="https://t.me/Boss_storesvzbot" class="block btn-main text-center flex items-center justify-center">Написать тех. поддержке</a>
+                    <a href="https://t.me/osnovabossstore" class="block bg-white/5 py-4 rounded-2xl font-black text-xs uppercase border border-white/5 text-white">Основной канал</a>
+                </div>
+            </div>
+
+            <h3 class="text-xs font-black uppercase mb-4 mt-10 ml-1 text-gray-400">FAQ (Вопросы и Ответы)</h3>
+            <div id="faq-list" class="space-y-3"></div>
+        </section>
+    </div>
+
+    <!-- Навигация -->
+    <nav class="nav-menu">
+        <div onclick="UI.tab('home')" id="n-home" class="nav-item active">🏠</div>
+        <div onclick="UI.tab('game')" id="n-game" class="nav-item">🎮</div>
+        <div onclick="UI.tab('profile')" id="n-profile" class="nav-item">👤</div>
+        <div onclick="UI.tab('support')" id="n-support" class="nav-item">💬</div>
+    </nav>
+
+    <!-- МОДАЛКА: КАРТОЧКА ТОВАРА -->
+    <div id="m-prod" class="fixed inset-0 z-[2000] bg-black/95 hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-[#111] border border-white/10 rounded-[32px] p-6 w-full max-w-sm animate__animated animate__zoomIn">
+            <div id="m-img" class="w-full h-44 rounded-2xl bg-cover bg-center mb-4 border border-white/5"></div>
+            <h3 id="m-title" class="font-orb font-black text-lg text-white mb-2 uppercase">...</h3>
+            <p id="m-desc" class="text-[10px] text-gray-500 mb-6 uppercase leading-relaxed"></p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <p class="text-[8px] text-gray-600 font-bold uppercase mb-2">Количество</p>
+                    <input type="number" id="m-qty" value="1" min="1" oninput="App.updateTotal()" class="w-full bg-black border border-white/10 rounded-xl p-3 text-center font-bold text-white outline-none focus:border-cyan-400">
+                </div>
+                <div class="text-right">
+                    <p class="text-[8px] text-gray-600 font-bold uppercase mb-2">Цена за шт.</p>
+                    <p id="m-price" class="text-lg font-orb font-black text-cyan-400">0.00 ₽</p>
+                </div>
+            </div>
+
+            <p class="text-[8px] text-gray-600 font-bold uppercase mb-2">Данные для получения товара</p>
+            <textarea id="m-data" placeholder="Ссылка на ваш профиль / никнейм..." class="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white outline-none focus:border-cyan-400 h-20 mb-6 resize-none"></textarea>
+
+            <div class="flex gap-3">
+                <button onclick="App.addToCart()" class="btn-main flex-[2]">В корзину</button>
+                <button onclick="UI.close('prod')" class="flex-1 bg-white/5 text-gray-400 rounded-xl font-bold text-[10px] uppercase">Отмена</button>
+            </div>
+            <button onclick="App.notifyStock()" class="w-full text-[8px] text-gray-700 font-black uppercase mt-4 block text-center">Уведомить о наличии</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: КОРЗИНА -->
+    <div id="m-cart" class="fixed inset-0 z-[2000] bg-black/95 hidden flex flex-col p-6 animate__animated animate__slideInRight">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="font-orb font-black text-2xl uppercase">КОРЗИНА</h2>
+            <button onclick="UI.close('cart')" class="text-gray-500 font-black text-xs uppercase">Закрыть</button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto space-y-4 no-scrollbar"></div>
+        <div class="pt-6 border-t border-white/10 mt-6">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <p id="discount-label" class="text-[8px] text-green-500 font-black uppercase mb-1 hidden">Скидка применена!</p>
+                    <p class="text-[10px] text-gray-500 font-black uppercase">К оплате</p>
+                </div>
+                <p id="cart-total" class="text-3xl font-orb font-black text-cyan-400">0.00 ₽</p>
+            </div>
+            <button onclick="UI.open('pay')" class="btn-main py-5 text-sm">Оформить заказ</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: ВЫБОР ОПЛАТЫ -->
+    <div id="m-pay" class="fixed inset-0 z-[3000] bg-black/90 hidden flex items-center justify-center p-6">
+        <div class="bg-[#111] border border-white/10 rounded-[32px] p-6 w-full max-w-xs text-center animate__animated animate__pulse">
+            <h3 class="font-orb font-black text-xs text-gray-500 mb-8 uppercase tracking-widest">Способ оплаты</h3>
+            <div class="space-y-3">
+                <button onclick="App.checkout('CryptoBot')" class="w-full bg-white/5 border border-white/5 py-4 rounded-2xl font-black text-xs uppercase hover:bg-cyan-400 hover:text-black transition-all text-white">💎 Crypto Bot</button>
+                <button onclick="App.checkout('YooKassa')" class="w-full bg-white/5 border border-white/5 py-4 rounded-2xl font-black text-xs uppercase hover:bg-cyan-400 hover:text-black transition-all text-white">💳 ЮKassa / Карты</button>
+                <button onclick="UI.close('pay')" class="text-gray-600 text-[8px] font-black uppercase mt-4 block mx-auto">Назад</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: LOOTBOX (ПОВЫШЕНИЕ ТИТУЛА) -->
+    <div id="m-loot" class="fixed inset-0 z-[4000] bg-cyan-500/20 backdrop-blur-xl hidden flex items-center justify-center p-6">
+        <div class="text-center animate__animated animate__bounceIn">
+            <div class="text-8xl mb-6">🎁</div>
+            <h2 class="font-orb font-black text-2xl mb-2 uppercase text-white">НОВЫЙ ТИТУЛ!</h2>
+            <p class="text-[9px] text-cyan-200 uppercase mb-8 font-black">Вам открыт праздничный Loot Box</p>
+            <button onclick="App.claimLoot()" class="bg-white text-black px-12 py-4 rounded-2xl font-black text-xs uppercase">Открыть бокс</button>
+        </div>
+    </div>
+
+    <!-- СЕКРЕТНЫЙ РАЗДЕЛ -->
+    <div id="m-secret" class="fixed inset-0 z-[5000] bg-black hidden flex flex-col p-8 font-mono overflow-hidden">
+        <div id="terminal" class="flex-1 text-cyan-500 text-[10px] space-y-2 overflow-y-auto no-scrollbar">
+            <p class="text-white font-bold text-lg mb-4">BOSS_SYSTEM v4.0 ACCESS</p>
+        </div>
+        <button onclick="UI.close('secret')" class="border border-cyan-500 text-cyan-500 py-4 rounded-xl text-xs uppercase mt-4">Закрыть сессию</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+
+        // Конфигурация приложения
+        const CONFIG = {
+            supabaseUrl: 'ТВОЙ_URL', 
+            supabaseKey: 'ТВОЙ_KEY',
+            sheetUrl: 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv',
+            botToken: '8034420193:AAGv0wBrV8q8YWXmkVWIsc9Khp1QPMm3Sjg',
+            adminChatId: '7727345054'
+        };
+
+        // Защищенная инициализация Supabase с поддержкой локального режима
+        let supabase = null;
+        try {
+            if (CONFIG.supabaseUrl && CONFIG.supabaseUrl !== 'ТВОЙ_URL') {
+                supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+            }
+        } catch (e) {
+            console.warn("Supabase integration disabled. Running in local fallback storage mode.");
+        }
+
+        let State = {
+            user: tg.initDataUnsafe?.user || { id: 7727345054, first_name: 'Boss Client', username: 'nmproda' },
+            profile: { spent: 0, title: 'Новичок', referrals_count: 0, history: [] },
+            products: [],
+            categories: [],
+            activeCat: 'Все',
+            cart: [],
+            selectedProduct: null,
+            flashSale: false,
+            secretTaps: 0,
+            simBalance: 839000000000
+        };
+
+        const App = {
+            async init() {
+                tg.expand();
+                tg.ready();
+
+                try {
+                    await this.syncProfile();
+                    await this.fetchProducts();
+                    this.runTimers();
+                    this.renderUI();
+                    this.checkReferral();
+
+                    if (!localStorage.getItem('is_registered_client')) {
+                        const welcomeMsg = `Привет! 👑 <b>${State.user.first_name}</b>, нажимай кнопку " SHOP " и начни свой премиум-путь в BOSS STORE! Лучшие цифровые товары и услуги ждут тебя!`;
+                        await this.notify(welcomeMsg);
+                        localStorage.setItem('is_registered_client', 'true');
+                    }
+                } catch (e) {
+                    console.error("Initialization error:", e);
+                    UI.toast("СИСТЕМА ЗАПУЩЕНА В ОФФЛАЙН РЕЖИМЕ");
+                    this.renderUI();
+                }
+            },
+
+            async syncProfile() {
+                if (!supabase) {
+                    this.loadLocalProfile();
+                    return;
+                }
+                let { data, error } = await supabase.from('profiles').select('*').eq('id', State.user.id).single();
+                
+                if (error || !data) {
+                    const newProf = {
+                        id: State.user.id,
+                        username: State.user.username || 'n/a',
+                        first_name: State.user.first_name,
+                        spent: 0,
+                        title: 'Новичок',
+                        history: []
+                    };
+                    await supabase.from('profiles').insert([newProf]);
+                    State.profile = newProf;
+                } else {
+                    State.profile = data;
+                }
+                this.updateUserStats();
+            },
+
+            loadLocalProfile() {
+                const stored = localStorage.getItem(`profile_${State.user.id}`);
+                if (stored) {
+                    State.profile = JSON.parse(stored);
+                } else {
+                    State.profile = {
+                        id: State.user.id,
+                        username: State.user.username || 'n/a',
+                        first_name: State.user.first_name,
+                        spent: 0,
+                        title: 'Новичок',
+                        history: [],
+                        referrals_count: 0
+                    };
+                    this.saveLocalProfile();
+                }
+                this.updateUserStats();
+            },
+
+            saveLocalProfile() {
+                localStorage.setItem(`profile_${State.user.id}`, JSON.stringify(State.profile));
+            },
+
+            async fetchProducts() {
+                try {
+                    const res = await fetch(CONFIG.sheetUrl);
+                    const text = await res.text();
+                    const rows = text.split('\n').slice(1);
+
+                    State.products = rows.map(row => {
+                        const cols = row.split(',');
+                        if (cols.length < 5) return null;
+                        return {
+                            cat: cols[0].trim(),
+                            name: cols[1].trim(),
+                            price: parseFloat(cols[2]) || 0,
+                            desc: cols[3].trim(),img: cols[4].trim()
+                        };
+                    }).filter(p => p);
+                } catch (err) {
+                    // Резервный список продуктов на случай недоступности таблицы
+                    State.products = [
+                        { cat: "IT и обучение", name: "Premium Курс Frontend", price: 4990.00, desc: "Обучение с нуля", img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97" },
+                        { cat: "Дизайн и графика", name: "Логотип Премиум", price: 15000.00, desc: "Уникальный брендинг", img: "https://images.unsplash.com/photo-1626785774573-4b799315345d" },
+                        { cat: "SMM и продвижение", name: "Продвижение Telegram", price: 8900.50, desc: "Живые подписчики", img: "https://images.unsplash.com/photo-1614102073832-030967418971" }
+                    ];
+                }
+                State.categories = ['Все', ...new Set(State.products.map(p => p.cat))];
+            },
+
+            renderUI() {
+                this.renderCats();
+                this.renderProducts();
+                this.renderRecs();
+                this.renderLeaders();
+                this.renderFAQ();
+            },
+
+            renderCats() {
+                const box = document.getElementById('cats');
+                if (!box) return;
+                box.innerHTML = State.categories.map(c => `
+                    <button onclick="App.setCat('${c}')" class="px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase whitespace-nowrap border ${State.activeCat === c ? 'bg-cyan-400 text-black border-cyan-400 shadow-lg' : 'bg-white/5 text-gray-500 border-white/5'}">
+                        ${c}
+                    </button>
+                `).join('');
+            },
+
+            setCat(c) {
+                State.activeCat = c;
+                this.renderCats();
+                this.renderProducts();
+            },
+
+            renderProducts() {
+                const searchEl = document.getElementById('search');
+                const search = searchEl ? searchEl.value.toLowerCase() : '';
+                const grid = document.getElementById('products-grid');
+                if (!grid) return;
+
+                const filtered = State.products.filter(p => 
+                    (State.activeCat === 'Все' || p.cat === State.activeCat) && 
+                    p.name.toLowerCase().includes(search)
+                );
+
+                grid.innerHTML = filtered.map(p => `
+                    <div onclick="App.openProd('${p.name.replace(/'/g, "\\'")}')" class="bg-white/5 border border-white/5 p-3 rounded-[28px] animate__animated animate__fadeIn cursor-pointer hover:border-cyan-400 transition-all">
+                        <div class="h-28 rounded-2xl bg-cover bg-center mb-3" style="background-image:url('${p.img}')"></div>
+                        <p class="text-[9px] font-black text-white uppercase truncate mb-1">${p.name}</p>
+                        <p class="font-orb text-cyan-400 text-[10px] font-black">${p.price.toFixed(2)} ₽</p>
+                    </div>
+                `).join('');
+            },
+
+            renderRecs() {
+                const box = document.getElementById('rec-products');
+                if (!box) return;
+                const recs = State.products.slice(0, 5);
+                box.innerHTML = recs.map(p => `
+                    <div onclick="App.openProd('${p.name.replace(/'/g, "\\'")}')" class="min-w-[140px] bg-white/5 border border-white/5 p-3 rounded-2xl cursor-pointer hover:border-cyan-400 transition-all">
+                        <div class="h-20 rounded-xl bg-cover bg-center mb-2" style="background-image:url('${p.img}')"></div>
+                        <p class="text-[8px] font-black text-white uppercase truncate">${p.name}</p>
+                    </div>
+                `).join('');
+            },
+
+            openProd(name) {
+                const p = State.products.find(x => x.name === name);
+                if (!p) return;
+                State.selectedProduct = p;
+                document.getElementById('m-title').innerText = p.name;
+                document.getElementById('m-desc').innerText = p.desc;
+                document.getElementById('m-price').innerText = p.price.toFixed(2) + ' ₽';
+                document.getElementById('m-img').style.backgroundImage = `url('${p.img}')`;
+                document.getElementById('m-qty').value = 1;
+                document.getElementById('m-data').value = '';
+                UI.open('prod');
+            },
+
+            updateTotal() {
+                const qtyVal = document.getElementById('m-qty').value;
+                const qty = parseInt(qtyVal) || 1;
+                const total = State.selectedProduct.price * qty;
+                document.getElementById('m-price').innerText = total.toFixed(2) + ' ₽';
+            },
+
+            addToCart() {
+                const qtyVal = document.getElementById('m-qty').value;
+                const qty = parseInt(qtyVal) || 1;
+                const data = document.getElementById('m-data').value;
+                if (!data) {
+                    UI.toast("УКАЖИТЕ ДАННЫЕ ДЛЯ ДОСТАВКИ!");
+                    return;
+                }
+
+                State.cart.push({ ...State.selectedProduct, qty, data });
+                UI.close('prod');
+                UI.toast("ДОБАВЛЕНО В КОРЗИНУ");
+                this.updateCartBadge();
+            },
+
+            updateCartBadge() {
+                const btn = document.getElementById('cart-count');
+                if (!btn) return;
+                btn.innerText = State.cart.length;
+                btn.classList.toggle('hidden', State.cart.length === 0);
+            },
+
+            getFinalPrice() {
+                let total = State.cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+                if (State.flashSale) total *= 0.96;
+                if (State.profile.title === 'Постоянный') total *= 0.98;
+                if (State.profile.title === 'VIP') total *= 0.96;
+                if (State.profile.title === 'БОСС') total *= 0.94;
+                
+                if (localStorage.getItem('ref_bonus')) total *= 0.97;
+
+                return total.toFixed(2);
+            },
+
+            async checkout(method) {
+                const final = this.getFinalPrice();
+                let msg = `📦 <b>НОВЫЙ ЗАКАЗ</b>\n`;
+                msg += `👤 ID клиента: <code>${State.user.id}</code>\n`;
+                msg += `👤 Юз клиента: @${State.user.username || 'не указан'}\n`;
+                msg += `💳 Метод оплаты: ${method}\n`;
+                msg += `💰 Сумма заказа: <b>${final} ₽</b>\n\n`;
+                msg += `🛒 Состав заказа:\n`;
+                
+                State.cart.forEach((item, i) => {
+                    msg += `${i+1}. ${item.name} (${item.qty} шт.)\n   └ Данные для получения: <i>${item.data}</i>\n`;
+                });
+
+                UI.toast("ОБРАБОТКА ТРАНЗАКЦИИ...");
+                
+                // Ввод данных интеграции мерчантов:
+                // 1. Для КРИПТОБОТА: Получите токен в @CryptoBot -> API -> Create App.
+                //    Замените этот блок fetch запросом к: https://pay.cryptomus.com/api/v1/payment или https://pay.cryptoboot.org/api
+                // 2. Для ЮКАССЫ: Создайте магазин в личном кабинете ЮKassa, получите ShopID и Секретный Ключ.
+                //    Рекомендуется выполнять запросы к API ЮKassa через свой сервер/Supabase Edge Functions для защиты ключей.
+          setTimeout(async () => {
+                    await this.notify(msg);
+                    
+                    const newSpent = parseFloat(State.profile.spent) + parseFloat(final);
+                    let newTitle = 'Новичок';
+                    if (newSpent >= 100000) newTitle = 'БОСС';
+                    else if (newSpent >= 50000) newTitle = 'VIP';
+                    else if (newSpent >= 10000) newTitle = 'Постоянный';
+
+                    const newHistory = [...(State.profile.history || []), ...State.cart];
+
+                    State.profile.spent = newSpent;
+                    State.profile.title = newTitle;
+                    State.profile.history = newHistory;
+
+                    if (supabase) {
+                        await supabase.from('profiles').update({
+                            spent: newSpent,
+                            title: newTitle,
+                            history: newHistory
+                        }).eq('id', State.user.id);
+                    } else {
+                        this.saveLocalProfile();
+                    }
+
+                    if (newTitle !== State.profile.title) {
+                        UI.open('loot');
+                    }
+
+                    State.cart = [];
+                    this.updateUserStats();
+                    this.updateCartBadge();
+                    UI.close('pay');
+                    UI.close('cart');
+                    UI.toast("ЗАКАЗ УСПЕШНО ОПЛАЧЕН!");
+                    confetti();
+                }, 1800);
+            },
+
+            updateUserStats() {
+                const uNameEl = document.getElementById('user-name');
+                if (uNameEl) {
+                    uNameEl.innerText = (State.user.first_name + (State.user.username ? ` (@${State.user.username})` : '')).toUpperCase();
+                }
+                const uIdEl = document.getElementById('user-id-display');
+                if (uIdEl) {
+                    uIdEl.innerText = `ID: ${State.user.id}`;
+                }
+                const uSpentEl = document.getElementById('user-spent');
+                if (uSpentEl) {
+                    uSpentEl.innerText = parseFloat(State.profile.spent || 0).toFixed(2) + ' ₽';
+                }
+                const uTitleEl = document.getElementById('user-title');
+                if (uTitleEl) {
+                    uTitleEl.innerText = State.profile.title;
+                }
+
+                const avatarFrame = document.getElementById('avatar-container');
+                if (avatarFrame && State.profile.title === 'БОСС') {
+                    avatarFrame.classList.add('frame-gold');
+                }
+
+                if (tg.initDataUnsafe?.user?.photo_url) {
+                    const avatarImg = document.getElementById('user-avatar');
+                    if (avatarImg) avatarImg.src = tg.initDataUnsafe.user.photo_url;
+                }
+
+                const statRefs = document.getElementById('stat-refs');
+                if (statRefs) statRefs.innerText = State.profile.referrals_count || 0;
+
+                const statDisc = document.getElementById('stat-discount');
+                if (statDisc) {
+                    const disc = State.profile.title === 'Новичок' ? '0' : State.profile.title === 'Постоянный' ? '2' : State.profile.title === 'VIP' ? '4' : '6';
+                    statDisc.innerText = disc + '%';
+                }
+
+                const refLink = document.getElementById('ref-link');
+                if (refLink) {
+                    refLink.innerText = `https://t.me/Boss_storesvzbot?start=${State.user.id}`;
+                }
+
+                this.renderHistory();
+            },
+
+            renderHistory() {
+                const box = document.getElementById('order-history');
+                if (!box) return;
+                const history = State.profile.history || [];
+                if (!history.length) {
+                    box.innerHTML = `<p class="text-[9px] text-gray-600 text-center uppercase py-5">История заказов пуста</p>`;
+                    return;
+                }
+                box.innerHTML = history.slice().reverse().map(item => `
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
+                        <div>
+                            <p class="text-[9px] font-black text-white uppercase truncate">${item.name}</p>
+                            <p class="text-[8px] text-gray-500 uppercase">${item.qty} шт.</p>
+                        </div>
+                        <p class="font-orb text-cyan-400 text-[10px] font-black">${(item.price * item.qty).toFixed(2)} ₽</p>
+                    </div>
+                `).join('');
+            },
+
+            runTimers() {
+                setInterval(() => {
+                    const now = new Date();
+                    const hrs = now.getHours();
+                    let g = "Добрый вечер";
+                    if (hrs < 12) g = "Доброе утро";
+                    else if (hrs < 18) g = "Добрый день";
+                    
+                    const greetEl = document.getElementById('greet');
+                    if (greetEl) greetEl.innerText = `${g}, ${State.user.first_name}`;
+
+                    // Циклический таймер: 12 часов ожидания -> 10 минут скидки
+                    const cycle = (12 * 3600) + 600;
+                    const elapsed = Math.floor(now.getTime() / 1000) % cycle;
+
+                    const statusEl = document.getElementById('timer-status');
+                    const clockEl = document.getElementById('timer-clock');
+
+                    if (statusEl && clockEl) {
+                        if (elapsed < 12 * 3600) {
+                            State.flashSale = false;
+                            const left = (12 * 3600) - elapsed;
+                            statusEl.innerText = "До начала:";
+                            clockEl.innerText = UI.fmtTime(left);
+                            clockEl.className = "font-orb text-xl font-black text-white/40";
+                        } else {
+                            State.flashSale = true;
+                            const left = cycle - elapsed;
+                            statusEl.innerText = "СКИДКИ 4% АКТИВНЫ!";
+                            clockEl.innerText = UI.fmtTime(left);
+                            clockEl.className = "font-orb text-xl font-black text-cyan-400 animate-pulse";
+                        }
+                    }
+                }, 1000);
+
+                // Лента социальной активности
+                const names = ["@alex_it", "@crypto_king", "@masha_smm", "@dima_design", "@boss_user", "@gold_buyer", "@invest_pro"];
+                const acts = ["приобрел разработку IT", "заказал пакет графики", "запустил продвижение", "оформил заказ", "стал партнером"];
+                setInterval(() => {
+                    const n = names[Math.floor(Math.random() * names.length)];
+                    const a = acts[Math.floor(Math.random() * acts.length)];
+                    const feed = document.getElementById('live-feed');
+                    if (feed) feed.innerText = `${n} ${a}...`;
+                }, 6000);
+            },
+
+            async renderLeaders() {
+                const leaderSpent = document.getElementById('leader-spent');
+                const leaderRefs = document.getElementById('leader-refs');
+                
+                if (supabase) {
+                    const { data: s } = await supabase.from('profiles').select('username, spent').order('spent', {ascending: false}).limit(5);
+                  const { data: r } = await supabase.from('profiles').select('username, referrals_count').order('referrals_count', {ascending: false}).limit(5);
+
+                    if (s && leaderSpent) leaderSpent.innerHTML = s.map((u, i) => `<div>${i+1}. @${u.username} - ${u.spent}₽</div>`).join('');
+                    if (r && leaderRefs) leaderRefs.innerHTML = r.map((u, i) => `<div>${i+1}. @${u.username} - ${u.referrals_count}</div>`).join('');
+                } else {
+                    if (leaderSpent) leaderSpent.innerHTML = `<div>1. @${State.user.username || 'user'} - ${State.profile.spent}₽</div>`;
+                    if (leaderRefs) leaderRefs.innerHTML = `<div>1. @${State.user.username || 'user'} - ${State.profile.referrals_count}</div>`;
+                }
+            },
+
+            renderFAQ() {
+                const list = document.getElementById('faq-list');
+                if (!list) return;
+                const f = [
+                    { q: "КАК БЫСТРО ВЫПОЛНЯЮТСЯ УСЛУГИ?", a: "Большинство автоматических услуг стартуют в течение 5-15 минут после оплаты. Крупные IT и дизайн-проекты выполняются по согласованию." },
+                    { q: "КАКИЕ ГАРАНТИИ ВЫ ПРЕДОСТАВЛЯЕТЕ?", a: "Мы гарантируем 100% манибэк в случае невыполнения обязательств или несоответствия условиям технического описания." },
+                    { q: "ГДЕ ХРАНЯТСЯ ПРАВИЛА FAQ И ТОВАРЫ?", a: "Товары подтягиваются на лету из вашей защищенной Google Таблицы, а данные о профилях безопасно хранятся в Supabase." }
+                ];
+                list.innerHTML = f.map(x => `
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <p class="text-[9px] font-black text-cyan-400 uppercase mb-1">${x.q}</p>
+                        <p class="text-[9px] text-gray-500 font-bold uppercase leading-relaxed">${x.a}</p>
+                    </div>
+                `).join('');
+            },
+
+            async checkReferral() {
+                const start = tg.initDataUnsafe?.start_param;
+                if (start && parseInt(start) !== State.user.id && !localStorage.getItem('ref_done_status')) {
+                    if (supabase) {
+                        const { data } = await supabase.from('profiles').select('referrals_count').eq('id', start).single();
+                        if (data) {
+                            await supabase.from('profiles').update({ referrals_count: data.referrals_count + 1 }).eq('id', start);
+                            localStorage.setItem('ref_bonus', 'true');
+                            localStorage.setItem('ref_done_status', 'true');
+                            UI.toast("РЕФЕРАЛЬНЫЙ БОНУС 3% СКИДКА АКТИВИРОВАН!");
+                        }
+                    } else {
+                        localStorage.setItem('ref_bonus', 'true');
+                        localStorage.setItem('ref_done_status', 'true');
+                        UI.toast("ЛОКАЛЬНЫЙ РЕФЕРАЛЬНЫЙ БОНУС 3%!");
+                    }
+                }
+            },
+
+            async notify(text) {
+                try {
+                    await fetch(`https://api.telegram.org/bot${CONFIG.botToken}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: CONFIG.adminChatId, text: text, parse_mode: 'HTML' })
+                    });
+                } catch(e) {
+                    console.warn("Notification not sent. Check token & adminChatId.");
+                }
+            },
+
+            notifyStock() {
+                this.notify(`🔔 <b>ЗАПРОС НАЛИЧИЯ ТОВАРА</b>\nID: <code>${State.user.id}</code>\nТовар: <b>${State.selectedProduct.name}</b>`);
+                UI.toast("УВЕДОМЛЕНИЕ ОТПРАВЛЕНО");
+                UI.close('prod');
+            },
+
+            copyRef() {
+                const link = document.getElementById('ref-link').innerText;
+                navigator.clipboard.writeText(link);
+                UI.toast("СКОПИРОВАНО В БУФЕР!");
+            },
+
+            secretTap() {
+                State.secretTaps++;
+                if (State.secretTaps >= 5) {
+                    UI.open('secret');
+                    this.runTerminal();
+                    State.secretTaps = 0;
+                }
+            },
+
+            runTerminal() {
+                const t = document.getElementById('terminal');
+                if (!t) return;
+                t.innerHTML = `<p class="text-white mb-4 font-bold">SYSTEM CONTROL ENGINE v4.0 ACCESS</p>`;
+                const lines = [
+                    "> Инициализация системных служб...",
+                    "> Соединение со шлюзом: СТАБИЛЬНОЕ",
+                    `> Пользователь авторизован: @${State.user.username || 'anonymous'}`,
+                    `> Локальный оборот покупок: ${State.profile.spent} ₽`,
+                    "> Статус терминала: BOSS LEVEL ACCESS GRANTED."
+                ];
+                lines.forEach((l, i) => {
+                    setTimeout(() => { t.innerHTML += `<p class="animate__animated animate__fadeIn">${l}</p>`; }, i * 350);
+                });
+            },
+
+            claimLoot() {
+                UI.close('loot');
+                UI.toast("БОКС ОТКРЫТ! ВЫ ПОЛУЧИЛИ КЛЮЧ ДОСТУПА!");
+            },
+
+            // Логика Симулятора Безумных Трат
+            simBuy(amount, itemName) {
+                if (State.simBalance >= amount) {
+                    State.simBalance -= amount;
+                    document.getElementById('sim-balance').innerText = `$${State.simBalance.toLocaleString()}`;
+                    UI.toast(`КУПЛЕНО: ${itemName}!`);
+                    if (State.simBalance === 0) {
+                        confetti();
+                        UI.toast("ВЫ УСПЕШНО ПОТРАТИЛИ ВСЕ ДЕНЬГИ!");
+                    }
+                } else {
+                    UI.toast("НЕДОСТАТОЧНО СРЕДСТВ ДЛЯ ТАКОЙ ТРАТЫ!");
+                }
+            },
+
+            resetSim() {
+                State.simBalance = 839000000000;
+                document.getElementById('sim-balance').innerText = `$${State.simBalance.toLocaleString()}`;
+                UI.toast("БАЛАНС СБРОШЕН ДО $839 МЛРД!");
+            }
+        };
+
+        const UI = {
+            tab(id) {
+                document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
+                
+                const activeView = document.getElementById(`view-${id}`);
+                const activeNavItem = document.getElementById(`n-${id}`);
+                
+                if (activeView) activeView.classList.add('active');
+                if (activeNavItem) activeNavItem.classList.add('active');
+                window.scrollTo(0, 0);
+            },
+
+            open(id) {
+                const m = document.getElementById(`m-${id}`);
+                if (m) {
+                    m.classList.remove('hidden');
+                    if (id === 'cart') this.renderCart();
+                }
+            },
+
+            close(id) {
+                const m = document.getElementById(`m-${id}`);
+                if (m) m.classList.add('hidden');
+            },
+
+            toggleTheme() {
+                const root = document.documentElement;
+                const isDark = root.getAttribute('data-theme') === 'dark';
+                root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+                const themeIcon = document.getElementById('theme-icon');
+                if (themeIcon) themeIcon.innerText = isDark ? '☀️' : '🌙';
+            },
+
+            toggleSkin() {
+                const root = document.documentElement;
+                const isCyber = root.getAttribute('data-skin') === 'cyberpunk';
+                root.setAttribute('data-skin', isCyber ? 'winter' : 'cyberpunk');
+                UI.toast("СКИН ИЗМЕНЕН");
+            },
+
+            renderCart() {
+                const box = document.getElementById('cart-items');
+                if (!box) return;
+
+                if (!State.cart.length) {
+                    box.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-20 uppercase font-bold">Корзина пуста</p>`;
+                } else {
+                    box.innerHTML = State.cart.map((item, i) => `
+                        <div class="bg-white/5 p-4 rounded-3xl border border-white/5 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] font-black uppercase text-white truncate">${item.name}</p>
+                                <p class="text-[8px] text-gray-500 font-bold">${item.qty} шт. × ${item.price.toFixed(2)} ₽</p>
+                            </div>
+                            <button onclick="State.cart.splice(${i}, 1); UI.renderCart(); App.updateCartBadge();" class="text-red-500 text-[10px] font-black uppercase px-2">Удалить</button>
+                        </div>
+                    `).join('');
+                }
+                const total = App.getFinalPrice();
+                document.getElementById('cart-total').innerText = total + ' ₽';
+                
+                const discLabel = document.getElementById('discount-label');
+                if (discLabel) {
+                    const normalTotal = State.cart.reduce((a, b) => a + (b.price * b.qty), 0);
+                    discLabel.classList.toggle('hidden', parseFloat(total) >= normalTotal);
+                }
+            },
+
+            fmtTime(s) {
+                const h = Math.floor(s / 3600).toString().padStart(2, '0');
+                const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+                const sc = (s % 60).toString().padStart(2, '0');
+                return `${h}:${m}:${sc}`;
+            },
+
+            toast(m) {
+                const b = document.getElementById('toast');
+                if (!b) return;
+                b.innerText = m;
+                b.classList.remove('hidden', 'animate__fadeOutUp');
+                b.classList.add('animate__fadeInDown');
+                setTimeout(() => {
+                    b.classList.replace('animate__fadeInDown', 'animate__fadeOutUp');
+                    setTimeout(() => b.classList.add('hidden'), 500);
+                }, 2500);
+            },
+
+            openCart() {
+                this.open('cart');
+            }
+        };
+
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>
