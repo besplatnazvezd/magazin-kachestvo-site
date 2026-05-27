@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS STORE | Digital Empire</title>
+    <!-- Внешние зависимости -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --boss-gold: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --bg-main: #ffffff;
+            --text-main: #000000;
+            --accent: #6366f1;
+        }
+
+        .dark-theme {
+            --bg-main: #0a0a0a;
+            --text-main: #ffffff;
+            --accent: #818cf8;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+        }
+
+        /* 22. Анимированные рамки */
+        .avatar-frame-gold {
+            position: relative;
+            padding: 4px;
+            background: var(--boss-gold);
+            background-size: 300% 300%;
+            animation: goldFlow 3s linear infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes goldFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Карточка BOSS STORE */
+        .boss-card {
+            background: linear-gradient(135deg, #1e1e1e 0%, #000000 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boss-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Скины (Праздничные темы) */
+              .skin-neon { --accent: #00ffcc; }
+        .skin-ruby { --accent: #e11d48; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .tab-active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+        
+        .product-card {
+            transition: transform 0.2s;
+        }
+        .product-card:active { transform: scale(0.95); }
+
+        /* Таймер Flash Sales */
+        .timer-glow {
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- 1. АВТО-ВХОД И ПРИВЕТСТВИЕ -->
+    <header class="p-6 flex justify-between items-center sticky top-0 z-50 bg-opacity-80 backdrop-blur-lg" id="header">
+        <div class="flex items-center gap-4">
+            <!-- 24. Секретный раздел по тапу -->
+            <div id="logo" onclick="handleSecretTap()" class="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg cursor-pointer select-none">B</div>
+            <div>
+                <p id="greeting-text" class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Доброе утро,</p>
+                <h1 id="user-nickname" class="font-black text-lg">Boss_Guest</h1>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <!-- 2. Тема (Солнце/Луна) -->
+            <button onclick="toggleTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-zinc-800 transition" id="theme-btn">
+                <i data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+            <div class="avatar-frame-gold shadow-lg" id="avatar-container">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" alt="avatar" class="w-10 h-10 rounded-full bg-white">
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 space-y-8">
+
+        <!-- 17. FLASH SALES -->
+        <div id="flash-sale-banner" class="bg-indigo-600 p-6 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl shadow-indigo-500/20">
+            <div class="relative z-10 flex justify-between items-center">
+                <div>
+                                      <h3 class="font-black italic text-2xl tracking-tighter">FLASH SALE -4%</h3>
+                    <p id="timer-status" class="text-[10px] font-bold uppercase opacity-80">До конца основной акции:</p>
+                </div>
+                <div id="flash-timer" class="text-3xl font-black timer-glow tabular-nums">12:00:00</div>
+            </div>
+            <div class="absolute -right-4 -bottom-4 opacity-10">
+                <i data-lucide="zap" class="w-32 h-32"></i>
+            </div>
+        </div>
+
+        <!-- 6. КАРТОЧКА BOSS STORE -->
+        <div class="boss-card p-6 rounded-[2.5rem] text-white flex flex-col justify-between h-52 shadow-2xl">
+            <div class="flex justify-between items-start z-10">
+                <div>
+                    <p class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Статус Аккаунта</p>
+                    <h2 class="text-3xl font-black italic">ULTRA BOSS</h2>
+                </div>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Telegram_logo.svg/2048px-Telegram_logo.svg.png" class="w-8 h-8 opacity-20">
+            </div>
+            <div class="flex justify-between items-end z-10">
+                <div>
+                    <p class="text-[10px] font-bold opacity-50 uppercase">Ваш ID</p>
+                    <p id="display-tg-id" class="font-mono text-lg font-bold">123456789</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-[10px] font-bold opacity-50 uppercase">Баланс</p>
+                    <p class="text-2xl font-black tracking-tighter">1,500.00 ₽</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- КАТЕГОРИИ (3. Популярные товары) -->
+        <div class="flex gap-3 overflow-x-auto no-scrollbar py-2">
+            <button onclick="filterCat('Все')" class="cat-pill bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap shadow-lg transition">Все товары</button>
+            <button onclick="filterCat('IT')" class="cat-pill bg-gray-100 dark:bg-zinc-800 px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition">IT и Обучение</button>
+            <button onclick="filterCat('Design')" class="cat-pill bg-gray-100 dark:bg-zinc-800 px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition">Дизайн</button>
+            <button onclick="filterCat('SMM')" class="cat-pill bg-gray-100 dark:bg-zinc-800 px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition">SMM</button>
+        </div>
+
+        <!-- СЕТКА ТОВАРОВ -->
+        <div id="product-grid" class="grid grid-cols-2 gap-4">
+            <!-- Загрузка из CSV -->
+        </div>
+
+        <!-- 10. БЛОК ОТЗЫВОВ -->
+        <div class="bg-gray-50 dark:bg-zinc-900 p-8 rounded-[3rem] text-center space-y-4 border border-gray-100 dark:border-zinc-800">
+            <div class="flex justify-center gap-1 text-yellow-400">
+                <i data-lucide="star" class="fill-current w-5 h-5"></i>
+                <i data-lucide="star" class="fill-current w-5 h-5"></i>
+                <i data-lucide="star" class="fill-current w-5 h-5"></i>
+                <i data-lucide="star" class="fill-current w-5 h-5"></i>
+                <i data-lucide="star" class="fill-current w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="text-4xl font-black tracking-tighter">4.9 / 5.0</h4>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">На основе 100+ реальных отзывов</p>
+            </div>
+        </div>
+
+        <!-- 13. КНОПКА ПОДДЕРЖКИ + КАНАЛ -->
+        <div class="grid grid-cols-2 gap-4">
+            <a href="https://t.me/nmproda" class="flex flex-col items-center p-6 bg-gray-50 dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 group">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition">
+                    <i data-lucide="help-circle"></i>
+                </div>
+                <span class="text-[10px] font-black uppercase">Поддержка</span>
+            </a>
+            <a href="https://t.me/osnovabossstore" class="flex flex-col items-center p-6 bg-gray-50 dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 group">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition">
+                    <i data-lucide="send"></i>
+                </div>
+                <span class="text-[10px] font-black uppercase">Наш Канал</span>
+            </a>
+        </div>
+
+        <!-- FAQ (Инструкция) -->
+        <div class="space-y-4">
+            <h3 class="text-sm font-black uppercase tracking-widest text-gray-500 ml-4">Инструкция и FAQ</h3>
+            <!-- 5. Инструкция по ссылке -->
+            <a href="https://promo-art.vercel.app/" class="block p-5 bg-indigo-600 rounded-[2rem] text-white flex justify-between items-center shadow-lg shadow-indigo-500/30 active:scale-95 transition">
+                <span class="font-bold text-sm">Как заказать? (Видео-гайд)</span>
+                <i data-lucide="play-circle"></i>
+            </a>
+            <div class="p-6 bg-gray-50 dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 leading-relaxed italic">
+                    "Все заказы обрабатываются вручную в течение 15 минут. После оплаты данные приходят вам в личные сообщения от бота."
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ТАБ-БАР -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-black bg-opacity-90 backdrop-blur-xl border-t border-gray-100 dark:border-zinc-800 px-8 py-5 flex justify-between items-center z-50">
+        <button onclick="navigate('shop')" class="tab-item text-indigo-600 flex flex-col items-center gap-1">
+            <i data-lucide="layout-grid" class="w-6 h-6"></i>
+            <span class="text-[8px] font-black uppercase">Shop</span>
+        </button>
+        <button onclick="showCart()" class="tab-item text-gray-400 flex flex-col items-center gap-1 relative">
+            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+            <span class="text-[8px] font-black uppercase">Корзина</span>
+            <div id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center hidden">0</div>
+        </button>
+        <button onclick="toggleSkin()" class="tab-item text-gray-400 flex flex-col items-center gap-1">
+            <i data-lucide="palette" class="w-6 h-6"></i>
+            <span class="text-[8px] font-black uppercase">Скин</span>
+        </button>
+    </nav>
+
+    <!-- МОДАЛКА: ТОВАР + КОЛИЧЕСТВО -->
+    <div id="modal-product" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md hidden flex items-end justify-center p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-[3rem] p-8 animate-slide-up">
+            <div class="flex justify-between items-start mb-6">
+                <h3 id="m-title" class="text-2xl font-black italic tracking-tighter">Название товара</h3>
+                <button onclick="closeModal('modal-product')" class="p-2 bg-gray-100 dark:bg-zinc-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- 27. Выбор количества -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Количество</label>
+                    <div class="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-2 rounded-2xl border border-gray-100 dark:border-zinc-700">
+                        <button onclick="changeQty(-1)" class="w-12 h-12 bg-white dark:bg-zinc-700 rounded-xl flex items-center justify-center shadow-sm"><i data-lucide="minus"></i></button>
+                        <input type="number" id="qty-input" value="1" min="1" class="flex-1 bg-transparent text-center font-black text-xl outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <button onclick="changeQty(1)" class="w-12 h-12 bg-white dark:bg-zinc-700 rounded-xl flex items-center justify-center shadow-sm"><i data-lucide="plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Ваши пожелания по заказу и данные для связи...</label>
+                    <textarea id="m-message" placeholder="Ваш ID в игре или пожелания..." class="w-full bg-gray-50 dark:bg-zinc-800 p-5 rounded-[1.5rem] border border-gray-100 dark:border-zinc-700 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px]"></textarea>
+                </div>
+
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-xs font-bold text-gray-400 uppercase">Итого</span>
+                    <span id="m-total" class="text-3xl font-black">0.00 ₽</span>
+                </div>
+
+                <button onclick="addToCart()" class="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm shadow-xl shadow-indigo-500/40 active:scale-95 transition">В корзину</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: КОРЗИНА -->
+    <div id="modal-cart" class="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md hidden flex items-end justify-center p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-[3rem] p-8 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-black italic tracking-tighter">КОРЗИНА</h2>
+                <button onclick="closeModal('modal-cart')"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div id="cart-list" class="flex-1 overflow-y-auto space-y-4 pr-2 no-scrollbar">
+                <!-- Товары корзины -->
+            </div>
+
+            <!-- 15. ВЫБОР ОПЛАТЫ -->
+            <div class="mt-8 pt-8 border-t border-gray-100 dark:border-zinc-800 space-y-4">
+                <p class="text-[10px] font-black uppercase text-gray-400 ml-2">Выберите способ оплаты</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="pay('Kassa')" class="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-600/5 font-black text-xs text-indigo-600">
+                        ЮKassa
+                    </button>
+                    <button onclick="pay('Crypto')" class="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-zinc-200 dark:border-zinc-700 font-black text-xs">
+                        КриптоБот
+                    </button>
+                </div>
+                <button id="final-pay-btn" class="w-full py-6 bg-black dark:bg-white dark:text-black text-white rounded-full font-black uppercase tracking-widest text-[10px] mt-2">Оформить всё</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: СЕКРЕТНЫЙ РАЗДЕЛ -->
+    <div id="modal-secret" class="fixed inset-0 z-[200] bg-black flex items-center justify-center hidden">
+        <div class="text-center space-y-6 p-10 animate-pulse">
+            <h2 class="text-6xl font-black text-white italic">BOSS MODE</h2>
+            <p class="text-green-500 font-mono text-sm uppercase tracking-[0.5em]">System Access Granted</p>
+            <div class="bg-zinc-900 p-6 rounded-3xl text-left font-mono text-[10px] text-green-400 border border-green-500/30">
+                > Initializing exploit...<br>
+                > Bypassing protocols...<br>
+                > Accessing developer tools...<br>
+                > Hello, NM PRODA.
+            </div>
+            <button onclick="closeModal('modal-secret')" class="px-8 py-3 bg-white rounded-full font-black text-black uppercase text-xs">Exit</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 480. КОНФИГУРАЦИЯ (НЕ ДЛЯ ПОКАЗА) ---
+        const CONFIG = {
+            BOT_TOKEN: "8034420193:AAGv0wBrV8q8YWXmkVWIsc9Khp1QPMm3Sjg",
+            ADMIN_ID: "7727345054", // Или ID твоего основного аккаунта
+            CSV_URL: "https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv",
+            YKASSA_KEY: "ЗАГЛУШКА_ДЛЯ_ЮКАССЫ",
+            CRYPTO_KEY: "ЗАГЛУШКА_ДЛЯ_КРИПТОБОТА"
+        };
+
+        let userState = {
+            id: 123456789,
+            first_name: "Boss_User",
+            cart: [],
+            theme: 'light',
+            skin: 'standard',
+            discount: 1 // Без скидки по умолчанию
+        };
+
+        let allProducts = [];
+        let selectedProduct = null;
+        let secretClicks = 0;
+
+        // ИНИЦИАЛИЗАЦИЯ
+        async function initApp() {
+            lucide.createIcons();
+            
+            // 1. Telegram WebApp Auth
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    userState.id = tg.initDataUnsafe.user.id;
+                    userState.first_name = tg.initDataUnsafe.user.first_name;
+                    
+                    // 3. Бот пишет новому клиенту (через вебхук или при первом входе)
+                    sendBotMessage(`Привет! ${userState.first_name}, нажимай кнопку SHOP в приложении!`);
+                }
+            }
+
+            document.getElementById('user-nickname').innerText = userState.first_name;
+            document.getElementById('display-tg-id').innerText = userState.id;
+            
+            setGreeting();
+            startFlashTimer();
+            await loadProducts();
+        }
+
+        // 26. ЦЕНЫ С КОПЕЙКАМИ
+        function formatPrice(num) {
+            return (num * userState.discount).toFixed(2);
+        }
+
+        // ЗАГРУЗКА ДАННЫХ ИЗ ГУГЛ ТАБЛИЦЫ
+        async function loadProducts() {
+            try {
+                const response = await fetch(CONFIG.CSV_URL);
+                const data = await response.text();
+                const rows = data.split('\n').slice(1);
+                
+                allProducts = rows.map(row => {
+                    const cols = row.split(',');
+                    return {
+                        cat: cols[0]?.trim(),
+                        name: cols[1]?.trim(),
+                        price: parseFloat(cols[2]) || 0,
+                        desc: cols[3]?.trim(),
+                        img: cols[4]?.trim()
+                    };
+                });
+                renderProducts(allProducts);
+            } catch (e) {
+                console.error("CSV Error", e);
+            }
+        }
+
+        function renderProducts(items) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = items.map((p, i) => `
+                <div class="product-card bg-white dark:bg-zinc-900 rounded-[2.5rem] p-3 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col" onclick="openProduct('${p.name}', ${p.price})">
+                    <div class="h-32 rounded-[1.8rem] overflow-hidden mb-3">
+                        <img src="${p.img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="px-2 flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-extrabold text-[11px] leading-tight line-clamp-2">${p.name}</h4>
+                        </div>
+                        <p class="text-[8px] text-gray-400 uppercase font-black tracking-widest mb-3">${p.cat}</p>
+                    </div>
+                    <div class="px-2 pb-2 flex justify-between items-center mt-auto">
+                        <span class="font-black text-indigo-600 dark:text-indigo-400 text-xs">${formatPrice(p.price)} ₽</span>
+                        <div class="w-8 h-8 bg-gray-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 8. ПРИВЕТСТВИЕ ПО ВРЕМЕНИ СУТОК
+        function setGreeting() {
+            const hour = new Date().getHours();
+            const gt = document.getElementById('greeting-text');
+            if (hour < 6) gt.innerText = "Доброй ночи,";
+            else if (hour < 12) gt.innerText = "Доброе утро,";
+            else if (hour < 18) gt.innerText = "Добрый день,";
+            else gt.innerText = "Добрый вечер,";
+        }
+
+        // 17. FLASH SALES ТАЙМЕР
+        function startFlashTimer() {
+            let mainTime = 12 * 3600; 
+            let promoTime = 7 * 60 + 27; 
+            const timerEl = document.getElementById('flash-timer');
+            const statusEl = document.getElementById('timer-status');
+
+            const interval = setInterval(() => {
+                if (mainTime > 0) {
+                    mainTime--;
+                    timerEl.innerText = formatTime(mainTime);
+                    userState.discount = 1;
+                } else if (promoTime > 0) {
+                    promoTime--;
+                    statusEl.innerText = "СКИДКА -4% АКТИВНА:";
+                    timerEl.classList.add('text-red-500');
+                    timerEl.innerText = formatTime(promoTime);
+                    userState.discount = 0.96; // Скидка 4%
+                    renderProducts(allProducts);
+                } else {
+                    clearInterval(interval);
+                    statusEl.innerText = "Акция завершена";
+                }
+            }, 1000);
+        }
+
+        function formatTime(s) {
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+        }
+
+        // УПРАВЛЕНИЕ ТЕМОЙ
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('theme-btn');
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                btn.innerHTML = '<i data-lucide="moon"></i>';
+            } else {
+                body.classList.add('dark-theme');
+                btn.innerHTML = '<i data-lucide="sun"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        // 21. ПРАЗДНИЧНЫЕ СКИНЫ
+        function toggleSkin() {
+            const body = document.body;
+            if (userState.skin === 'standard') {
+                body.classList.add('skin-neon');
+                userState.skin = 'neon';
+            } else {
+                body.classList.remove('skin-neon');
+                userState.skin = 'standard';
+            }
+        }
+
+        // МОДАЛКА ТОВАРА
+        function openProduct(name, price) {
+            selectedProduct = { name, price };
+            document.getElementById('m-title').innerText = name;
+            document.getElementById('qty-input').value = 1;
+            document.getElementById('m-message').value = '';
+            updateModalTotal();
+            document.getElementById('modal-product').classList.remove('hidden');
+        }
+
+        function updateModalTotal() {
+            const qty = parseInt(document.getElementById('qty-input').value);
+            const total = selectedProduct.price * qty * userState.discount;
+            document.getElementById('m-total').innerText = `${total.toFixed(2)} ₽`;
+        }
+
+        function changeQty(v) {
+            const inp = document.getElementById('qty-input');
+            let current = parseInt(inp.value);
+            if (current + v >= 1) inp.value = current + v;
+            updateModalTotal();
+        }
+
+        // КОРЗИНА
+        function addToCart() {
+            const qty = parseInt(document.getElementById('qty-input').value);
+            const msg = document.getElementById('m-message').value;
+            userState.cart.push({
+                ...selectedProduct,
+                qty,
+                msg,
+                finalPrice: selectedProduct.price * userState.discount
+            });
+            updateCartUI();
+            closeModal('modal-product');
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            badge.innerText = userState.cart.length;
+            badge.classList.toggle('hidden', userState.cart.length === 0);
+            
+            const list = document.getElementById('cart-list');
+            list.innerHTML = userState.cart.map((item, idx) => `
+                <div class="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-4 rounded-3xl">
+                    <div class="flex-1">
+                        <p class="font-black text-xs uppercase italic">${item.name}</p>
+                        <p class="text-[10px] text-gray-400 font-bold">${item.qty} шт. x ${item.finalPrice.toFixed(2)} ₽</p>
+                    </div>
+                    <button onclick="removeFromCart(${idx})" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function showCart() {
+            document.getElementById('modal-cart').classList.remove('hidden');
+        }
+
+        function removeFromCart(idx) {
+            userState.cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // 24. СЕКРЕТНЫЙ РАЗДЕЛ
+        function handleSecretTap() {
+            secretClicks++;
+            if (secretClicks >= 7) {
+                document.getElementById('modal-secret').classList.remove('hidden');
+                secretClicks = 0;
+            }
+            setTimeout(() => { if(secretClicks < 7) secretClicks = 0; }, 2000);
+        }
+
+        // 28. ПОКУПКА: ОТПРАВКА В БОТА
+        async function pay(method) {
+            if (userState.cart.length === 0) return alert("Корзина пуста");
+
+            let orderText = userState.cart.map(i => 
+                `• ${i.name}\n  Кол-во: ${i.qty}\n  Данные: ${i.msg}`
+            ).join('\n\n');
+
+            const total = userState.cart.reduce((sum, i) => sum + (i.finalPrice * i.qty), 0);
+
+            const message = `
+🌟 НОВЫЙ ЗАКАЗ [${method}]
+━━━━━━━━━━━━━━
+👤 Клиент: ${userState.first_name}
+🆔 ID: ${userState.id}
+🛍 Заказано:
+${orderText}
+━━━━━━━━━━━━━━
+💰 ИТОГО: ${total.toFixed(2)} ₽
+            `;
+
+            // Отправка админу
+            await sendBotMessage(message, CONFIG.ADMIN_ID);
+            
+            alert(`Переход к оплате через ${method}. Данные заказа переданы администратору.`);
+            userState.cart = [];
+            updateCartUI();
+            closeModal('modal-cart');
+        }
+
+        async function sendBotMessage(text, chat_id = null) {
+            const cid = chat_id || userState.id;
+            try {
+                await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: cid, text: text })
+                });
+              } catch (e) { console.error("Bot Error", e); }
+        }
+
+        function filterCat(cat) {
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('bg-indigo-600', 'text-white'));
+            event.target.classList.add('bg-indigo-600', 'text-white');
+            
+            if (cat === 'Все') renderProducts(allProducts);
+            else renderProducts(allProducts.filter(p => p.cat === cat));
+        }
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
