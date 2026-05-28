@@ -469,7 +469,7 @@
             banner.innerText = `${text}`;
         }
 
-        // Парсер CSV с поддержкой кавычек (без поломок структуры)
+        // Улучшенный парсер: ИГНОРИРУЕТ ПУСТЫЕ СТРОКИ С ЗАПЯТЫМИ СНИЗУ ТАБЛИЦЫ
         function parseGoogleCSV(rawText) {
             const lines = rawText.split('\n');
             const data = [];
@@ -477,8 +477,11 @@
                 const line = lines[i].trim();
                 if (!line) continue;
                 
+                // Если строка состоит только из запятых (пустая строка в Excel/Google таблицах), пропускаем её
+                if (line.replace(/,/g, '').trim() === '') continue;
+                
                 const columns = [];
-              let isInsideQuotes = false;
+                let isInsideQuotes = false;
                 let buffer = '';
                 
                 for (let charIndex = 0; charIndex < line.length; charIndex++) {
@@ -494,13 +497,19 @@
                 }
                 columns.push(buffer.trim());
                 
+                // Проверяем, что хотя бы Название товара (Колонка B) или Категория (Колонка A) не пустые
+                const cat = columns[0] ? columns[0].replace(/^"|"$/g, '').trim() : '';
+                const name = columns[1] ? columns[1].replace(/^"|"$/g, '').trim() : '';
+                
+                if (!cat && !name) continue; // Если пустая строка замаскировалась, пропускаем её!
+
                 data.push({
-                    id: i, // Уникальный целочисленный идентификатор
-                    cat: columns[0] ? columns[0].replace(/^"|"$/g, '') : 'Прочее',
-                    name: columns[1] ? columns[1].replace(/^"|"$/g, '') : 'Без названия',
+                    id: i,
+                    cat: cat || 'Прочее',
+                    name: name || 'Без названия',
                     price: parseFloat(columns[2]) || 0,
-                    desc: columns[3] ? columns[3].replace(/^"|"$/g, '') : 'Описание отсутствует',
-                    img: columns[4] ? columns[4].replace(/^"|"$/g, '') : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80'
+                    desc: columns[3] ? columns[3].replace(/^"|"$/g, '').trim() : 'Описание отсутствует',
+                    img: columns[4] ? columns[4].replace(/^"|"$/g, '').trim() : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80'
                 });
             }
             return data;
