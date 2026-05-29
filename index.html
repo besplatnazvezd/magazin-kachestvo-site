@@ -107,6 +107,13 @@
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
+                .text-gold-premium {
+            background: var(--boss-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+                }
 
         /* Стилизация премиум компонентов */
         .input-premium {
@@ -157,7 +164,7 @@
     <header class="p-5 flex justify-between items-center sticky top-0 z-40 bg-custom-header backdrop-blur-md bg-opacity-95">
         <div class="flex items-center gap-4">
             <!-- 24. Секретный раздел (открывается тапом по логотипу) -->
-            <div id="logo-trigger" onclick="handleSecretTap()" class="w-11 h-11 bg-black text-white rounded-xl flex items-center justify-center font-black text-xl shadow-md cursor-pointer select-none">B</div>
+            <div id="logo-trigger" onclick="handleSecretTap()" class="w-11 h-11 bg-black text-yellow-500/70 rounded-xl flex items-center justify-center font-black text-xl shadow-md cursor-pointer select-none">BS</div>
             <div>
                 <p id="greeting-banner" class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Добро пожаловать</p>
                 <h1 id="user-display-name" class="font-extrabold text-base tracking-tight">Boss_Guest</h1>
@@ -191,10 +198,10 @@
             </div>
 
             <!-- 6. КАРТОЧКА BOSS STORE -->
-            <div class="boss-card p-6 rounded-[2rem] text-white flex flex-col justify-between h-48 shadow-xl">
+            <div class="boss-card p-6 rounded-[2rem] text-yellow-500/70 flex flex-col justify-between h-48 shadow-xl">
                 <div class="flex justify-between items-start z-10">
                     <div>
-                        <span class="text-[8px] font-bold opacity-60 uppercase tracking-widest">Premium Card</span>
+                        <span class="text-[8px] font-bold text-yellow-500/70 uppercase tracking-widest">Premium Card</span>
                         <h2 class="text-2xl font-black italic tracking-tighter">ULTRA BOSS</h2>
                     </div>
                     <div class="w-7 h-7 bg-white/10 rounded-full flex items-center justify-center">
@@ -203,12 +210,12 @@
                 </div>
                 <div class="flex justify-between items-end z-10">
                     <div>
-                        <p class="text-[8px] font-bold opacity-40 uppercase tracking-wider">Ваш Telegram ID</p>
+                        <p class="text-[8px] font-bold text-yellow-500/70 uppercase tracking-wider">Ваш Telegram ID</p>
                         <p id="client-tg-id" class="font-mono text-base font-bold tracking-wide">123456789</p>
                     </div>
-                    <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
+                                        <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
                     <div class="avatar-frame-gold shadow-lg">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=BossStore" class="w-12 h-12 rounded-full bg-zinc-900" alt="Avatar">
+                        <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=BossStore" class="w-12 h-12 rounded-full bg-zinc-900" alt="Avatar">
                     </div>
                 </div>
             </div>
@@ -240,7 +247,7 @@
                 </div>
                 <h4 class="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">4.9 / 5.0</h4>
                 <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                  На основе более 500 реальных отзывов</p>
+                  На основе более 100+ реальных отзывов</p>
             </div>
 
             <!-- 13. Кнопка поддержки + ссылка на канал -->
@@ -266,8 +273,9 @@
                     <span class="font-extrabold text-xs">Инструкция по услугам (Гайд)</span>
                     <i data-lucide="external-link" class="w-4 h-4"></i>
                 </a>
-                <div class="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] border border-gray-200 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed italic">
-                    "Все товары и цифровые услуги передаются покупателю через нашего автоматизированного бота связи в течение 10-15 минут после подтверждения оплаты."
+                <div class="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] border border-gray-200 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+    <p class="italic mb-2">"Все заказы и цифровые услуги передаются покупателю через администратора <span class="text-indigo-500 font-bold">@nmproda</span>."</p>
+    <p>Работа начинается сразу <span class="text-zinc-900 dark:text-white font-bold">после подтверждения оплаты</span>. Заказ будет выдан по готовности на ваши данные, которые вы указали в комментариях при оформлении. Ориентировочные сроки выполнения указаны в описании каждого конкретного товара.</p>
                 </div>
             </div>
         </div>
@@ -301,7 +309,10 @@
             
             <!-- Шапка страницы просмотра -->
             <div class="flex justify-between items-center">
-                <button onclick="closeProductDetailPage()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-zinc-900"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                <button onclick="closeProductDetailPage()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+    <i data-lucide="x" class="w-5 h-5 text-zinc-900 dark:text-white"></i>
+                </button>
+                
                 <span class="text-xs font-black uppercase tracking-widest text-gray-400">Детали товара</span>
                 <div class="w-10"></div>
             </div>
@@ -314,7 +325,7 @@
             <!-- Текстовая информация -->
             <div class="space-y-2">
                 <span id="detail-cat" class="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Категория</span>
-                <h2 id="detail-title" class="text-2xl font-black text-zinc-900 dark:text-white">Название</h2>
+                <h2 id="detail-title" class="text-2xl font-black text-gold-premium">Название</h2>
                 <p id="detail-desc" class="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed"></p>
             </div>
 
@@ -426,19 +437,24 @@
         let logoTaps = 0;
         let tapTimer = null;
 
-        // Инициализация при загрузке
-        async function initializeApp() {
+                async function initializeApp() {
             lucide.createIcons();
             
-            // Интеграция с Telegram WebApp
+            let avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${appState.username}`; // Красивый аватар по умолчанию
+
             if (window.Telegram && window.Telegram.WebApp) {
                 const tgWebApp = window.Telegram.WebApp;
                 tgWebApp.expand();
                 if (tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
-                    appState.userId = tgWebApp.initDataUnsafe.user.id.toString();
-                    appState.username = tgWebApp.initDataUnsafe.user.username || tgWebApp.initDataUnsafe.user.first_name || "Guest";
+                    const tgUser = tgWebApp.initDataUnsafe.user;
+                    appState.userId = tgUser.id.toString();
+                    appState.username = tgUser.username || tgUser.first_name || "Guest";
                     
-                    // 7. Приветствие нового клиента от бота
+                    // Если у пользователя открыта аватарка в Telegram, берем её
+                    if (tgUser.photo_url) {
+                        avatarUrl = tgUser.photo_url;
+                    }
+
                     if (!localStorage.getItem(`new_user_welcomed_${appState.userId}`)) {
                         sendWelcomeNotification(appState.username, appState.userId);
                         localStorage.setItem(`new_user_welcomed_${appState.userId}`, "true");
@@ -448,11 +464,12 @@
 
             document.getElementById('user-display-name').innerText = appState.username;
             document.getElementById('client-tg-id').innerText = appState.userId;
+            document.getElementById('user-avatar').src = avatarUrl; // Устанавливаем аватарку
             
             applyGreeting();
             runPromoCountdown();
             await fetchProductsFromSheet();
-        }
+                }
 
         // Приветствие по времени суток (8)
         function applyGreeting() {
@@ -469,7 +486,7 @@
             banner.innerText = `${text}`;
         }
 
-        // Парсер CSV с поддержкой кавычек (без поломок структуры)
+                // Улучшенный парсер: ИГНОРИРУЕТ ПУСТЫЕ СТРОКИ С ЗАПЯТЫМИ СНИЗУ ТАБЛИЦЫ
         function parseGoogleCSV(rawText) {
             const lines = rawText.split('\n');
             const data = [];
@@ -477,8 +494,11 @@
                 const line = lines[i].trim();
                 if (!line) continue;
                 
+                // Если строка состоит только из запятых (пустая строка в Excel/Google таблицах), пропускаем её
+                if (line.replace(/,/g, '').trim() === '') continue;
+                
                 const columns = [];
-              let isInsideQuotes = false;
+                let isInsideQuotes = false;
                 let buffer = '';
                 
                 for (let charIndex = 0; charIndex < line.length; charIndex++) {
@@ -494,13 +514,19 @@
                 }
                 columns.push(buffer.trim());
                 
+                // Проверяем, что хотя бы Название товара (Колонка B) или Категория (Колонка A) не пустые
+                const cat = columns[0] ? columns[0].replace(/^"|"$/g, '').trim() : '';
+                const name = columns[1] ? columns[1].replace(/^"|"$/g, '').trim() : '';
+                
+                if (!cat && !name) continue; // Если пустая строка замаскировалась, пропускаем её!
+
                 data.push({
-                    id: i, // Уникальный целочисленный идентификатор
-                    cat: columns[0] ? columns[0].replace(/^"|"$/g, '') : 'Прочее',
-                    name: columns[1] ? columns[1].replace(/^"|"$/g, '') : 'Без названия',
+                    id: i,
+                    cat: cat || 'Прочее',
+                    name: name || 'Без названия',
                     price: parseFloat(columns[2]) || 0,
-                    desc: columns[3] ? columns[3].replace(/^"|"$/g, '') : 'Описание отсутствует',
-                    img: columns[4] ? columns[4].replace(/^"|"$/g, '') : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80'
+                    desc: columns[3] ? columns[3].replace(/^"|"$/g, '').trim() : 'Описание отсутствует',
+                    img: columns[4] ? columns[4].replace(/^"|"$/g, '').trim() : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80'
                 });
             }
             return data;
@@ -554,7 +580,7 @@
                         <img src="${p.img}" class="w-full h-full object-cover">
                     </div>
                     <div class="px-1 flex-1">
-                        <h4 class="font-extrabold text-[11px] leading-tight line-clamp-2 text-zinc-900 dark:text-white mb-1">${p.name}</h4>
+                        <h4 class="font-extrabold text-[11px] leading-tight line-clamp-2 text-gold-premium mb-1">${p.name}</h4>
                         <p class="text-[8px] text-gray-400 uppercase font-bold tracking-wider mb-2">${p.cat}</p>
                     </div>
                     <div class="px-1 flex justify-between items-center mt-auto">
