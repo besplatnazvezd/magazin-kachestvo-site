@@ -107,7 +107,15 @@
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
-
+        
+        .text-gold-premium {
+            background: var(--boss-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+        
         /* Стилизация премиум компонентов */
         .input-premium {
             border-bottom: 2px solid var(--border-color);
@@ -240,7 +248,7 @@
                 </div>
                 <h4 class="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">4.9 / 5.0</h4>
                 <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                  На основе более 500 реальных отзывов</p>
+                  На основе более 100+ реальных отзывов</p>
             </div>
 
             <!-- 13. Кнопка поддержки + ссылка на канал -->
@@ -563,7 +571,7 @@
                         <img src="${p.img}" class="w-full h-full object-cover">
                     </div>
                     <div class="px-1 flex-1">
-                        <h4 class="font-extrabold text-[11px] leading-tight line-clamp-2 text-zinc-900 dark:text-white mb-1">${p.name}</h4>
+                        <h4 class="font-extrabold text-[11px] leading-tight line-clamp-2 text-gold-premium mb-1">${p.name}</h4>
                         <p class="text-[8px] text-gray-400 uppercase font-bold tracking-wider mb-2">${p.cat}</p>
                     </div>
                     <div class="px-1 flex justify-between items-center mt-auto">
