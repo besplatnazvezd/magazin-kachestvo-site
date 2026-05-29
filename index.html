@@ -214,9 +214,9 @@
                         <p class="text-[8px] font-bold opacity-40 uppercase tracking-wider">Ваш Telegram ID</p>
                         <p id="client-tg-id" class="font-mono text-base font-bold tracking-wide">123456789</p>
                     </div>
-                    <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
+                                        <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
                     <div class="avatar-frame-gold shadow-lg">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=BossStore" class="w-12 h-12 rounded-full bg-zinc-900" alt="Avatar">
+                        <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=BossStore" class="w-12 h-12 rounded-full bg-zinc-900" alt="Avatar">
                     </div>
                 </div>
             </div>
@@ -438,18 +438,23 @@
         let tapTimer = null;
 
         // Инициализация при загрузке
-        async function initializeApp() {
+                async function initializeApp() {
             lucide.createIcons();
             
-            // Интеграция с Telegram WebApp
+            let avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${appState.username}`; 
+
             if (window.Telegram && window.Telegram.WebApp) {
                 const tgWebApp = window.Telegram.WebApp;
                 tgWebApp.expand();
                 if (tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
-                    appState.userId = tgWebApp.initDataUnsafe.user.id.toString();
-                    appState.username = tgWebApp.initDataUnsafe.user.username || tgWebApp.initDataUnsafe.user.first_name || "Guest";
+                    const tgUser = tgWebApp.initDataUnsafe.user;
+                    appState.userId = tgUser.id.toString();
+                    appState.username = tgUser.username || tgUser.first_name || "Guest";
                     
-                    // 7. Приветствие нового клиента от бота
+                    if (tgUser.photo_url) {
+                        avatarUrl = tgUser.photo_url;
+                    }
+
                     if (!localStorage.getItem(`new_user_welcomed_${appState.userId}`)) {
                         sendWelcomeNotification(appState.username, appState.userId);
                         localStorage.setItem(`new_user_welcomed_${appState.userId}`, "true");
@@ -460,10 +465,14 @@
             document.getElementById('user-display-name').innerText = appState.username;
             document.getElementById('client-tg-id').innerText = appState.userId;
             
+            // Проверяем, существует ли элемент перед тем как ставить аву
+            const avatarElem = document.getElementById('user-avatar');
+            if (avatarElem) avatarElem.src = avatarUrl;
+            
             applyGreeting();
             runPromoCountdown();
             await fetchProductsFromSheet();
-        }
+                }
 
         // Приветствие по времени суток (8)
         function applyGreeting() {
