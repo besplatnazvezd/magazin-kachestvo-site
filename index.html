@@ -12,9 +12,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --boss-gold: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            
+            :root {
+        --boss-gold: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+        --text-primary-skin: #ffffff; /* По умолчанию белый */
+    }
+    
+    body.skin-neon {
+        --text-primary-skin: #00ffcc; /* Цвет для неона */
+    }
+    
+    body.skin-ruby {
+        --text-primary-skin: #ff6b6b; /* Цвет для рубина */
+    }
+
+    /* Класс, который мы будем давать белому тексту */
+    .text-primary-skin {
+        color: var(--text-primary-skin) !important;
+        transition: color 0.3s ease;
+    }
             /* СВЕТЛАЯ ТЕМА (Максимальный контраст и премиальный стиль) */
             --bg-main: #ffffff;
             --bg-secondary: #f3f4f6;
@@ -168,7 +183,7 @@
             <div id="logo-trigger" onclick="handleSecretTap()" class="w-11 h-11 bg-black text-white rounded-xl flex items-center justify-center font-black text-xl shadow-md cursor-pointer select-none">B</div>
             <div>
                 <p id="greeting-banner" class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Добро пожаловать</p>
-                <h1 id="user-display-name" class="font-extrabold text-base tracking-tight">Boss_Guest</h1>
+                <h1 id="user-display-name" class="font-extrabold text-base tracking-tight text-primary-skin">Boss_Guest</h1>
             </div>
         </div>
         
@@ -184,7 +199,7 @@
         <!-- ВКЛАДКА 1: SHOP (МАГАЗИН) -->
         <div id="tab-shop" class="tab-view space-y-6 py-4">
             
-            <!-- 17. FLASH SALES ТАЙМЕР
+            
   <div id="flash-sale" class="bg-indigo-600 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg">
                 <div class="relative z-10 flex justify-between items-center">
                     <div>
@@ -202,8 +217,8 @@
             <div class="boss-card p-6 rounded-[2rem] text-white flex flex-col justify-between h-48 shadow-xl">
                 <div class="flex justify-between items-start z-10">
                     <div>
-                        <span class="text-[8px] font-bold opacity-60 uppercase tracking-widest">Premium Card</span>
-                        <h2 class="text-2xl font-black italic tracking-tighter">ULTRA BOSS</h2>
+                        <span class="text-[8px] font-bold text-yellow-500/70 uppercase tracking-widest">Premium Card</span>
+                             <h2 class="text-2xl font-black italic tracking-tighter text-primary-skin">ULTRA BOSS</h2>
                     </div>
                     <div class="w-7 h-7 bg-white/10 rounded-full flex items-center justify-center">
                         <i data-lucide="crown" class="w-4 h-4 text-yellow-400"></i>
@@ -211,8 +226,8 @@
                 </div>
                 <div class="flex justify-between items-end z-10">
                     <div>
-                        <p class="text-[8px] font-bold opacity-40 uppercase tracking-wider">Ваш Telegram ID</p>
-                        <p id="client-tg-id" class="font-mono text-base font-bold tracking-wide">123456789</p>
+                        <p class="text-[8px] font-bold text-yellow-500/70 uppercase tracking-wider">Ваш Telegram ID</p>
+                             <p id="client-tg-id" class="font-mono text-base font-bold tracking-wide text-primary-skin">123456789</p>
                     </div>
                                         <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
                     <div class="avatar-frame-gold shadow-lg">
