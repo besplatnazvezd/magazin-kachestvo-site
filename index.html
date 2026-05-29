@@ -199,7 +199,7 @@
         <!-- ВКЛАДКА 1: SHOP (МАГАЗИН) -->
         <div id="tab-shop" class="tab-view space-y-6 py-4">
             
-            
+            <!--
   <div id="flash-sale" class="bg-indigo-600 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg">
                 <div class="relative z-10 flex justify-between items-center">
                     <div>
@@ -213,12 +213,18 @@
                 </div>
             </div>
 
-            <!-- 6. КАРТОЧКА BOSS STORE -->
-            <div class="boss-card p-6 rounded-[2rem] text-white flex flex-col justify-between h-48 shadow-xl">
+                        <!-- 6. КАРТОЧКА BOSS STORE -->
+            <div class="boss-card p-6 rounded-[2rem] text-white flex flex-col justify-between h-48 shadow-xl relative overflow-hidden">
+                
+                <!-- КАРТИНКА ПО ЦЕНТРУ -->
+                <img src="https://i.ibb.co/DD7Yp0Fp/IMG-20260529-151228-718.jpg" 
+                     class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-auto opacity-40 pointer-events-none z-0" 
+                     alt="Card Center Decor">
+
                 <div class="flex justify-between items-start z-10">
                     <div>
                         <span class="text-[8px] font-bold text-yellow-500/70 uppercase tracking-widest">Premium Card</span>
-                             <h2 class="text-2xl font-black italic tracking-tighter text-primary-skin">ULTRA BOSS</h2>
+                        <h2 class="text-2xl font-black italic tracking-tighter text-primary-skin">ULTRA BOSS</h2>
                     </div>
                     <div class="w-7 h-7 bg-white/10 rounded-full flex items-center justify-center">
                         <i data-lucide="crown" class="w-4 h-4 text-yellow-400"></i>
@@ -227,14 +233,15 @@
                 <div class="flex justify-between items-end z-10">
                     <div>
                         <p class="text-[8px] font-bold text-yellow-500/70 uppercase tracking-wider">Ваш Telegram ID</p>
-                             <p id="client-tg-id" class="font-mono text-base font-bold tracking-wide text-primary-skin">123456789</p>
+                        <p id="client-tg-id" class="font-mono text-base font-bold tracking-wide text-primary-skin">849156038</p>
                     </div>
-                                        <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
+                    <!-- 22. Анимированная рамка для аватарок (Золото для БОССОВ) -->
                     <div class="avatar-frame-gold shadow-lg">
                         <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=BossStore" class="w-12 h-12 rounded-full bg-zinc-900" alt="Avatar">
                     </div>
                 </div>
             </div>
+            
 
             <!-- 2. Сверху горизонтальные категории -->
             <div class="overflow-x-auto no-scrollbar py-1">
