@@ -492,6 +492,7 @@
             if (banner) banner.innerText = `${text}`;
         }
 
+ 
         let gameActive = false;
         function startGame() {
             if (gameActive) return;
@@ -514,6 +515,13 @@
             let score = 0;
             let gameSpeed = 3;
             let frame = 0;
+
+            // --- СИСТЕМА ДИНАМИЧЕСКИХ ОБОЕВ ---
+            const backgrounds = ['forest', 'city', 'mountains', 'sea'];
+            let bgIndex = 0;
+            let lastBgSwitch = Date.now();
+            let currentBg = backgrounds[bgIndex];
+            let bgDecorations = []; // Задний план (деревья, дома, акулы)
 
             const dino = {
                 x: 30, y: canvas.height - 40, w: 30, h: 30,
@@ -542,8 +550,79 @@
                 frame++;
                 score++;
                 if (frame % 10 === 0) scoreEl.innerText = Math.floor(score / 10);
-                if (frame % 500 === 0) gameSpeed += 0.5;
+                if (frame % 500 === 0) gameSpeed += 0.2;
 
+                // --- 12.5 СЕКУНДНЫЙ ТАЙМЕР СМЕНЫ ФОНА ---
+                const nowTime = Date.now();
+                if (nowTime - lastBgSwitch >= 12500) {
+                    bgIndex = (bgIndex + 1) % backgrounds.length;
+                    currentBg = backgrounds[bgIndex];
+                    lastBgSwitch = nowTime;
+                    
+                    // Меняем градиент контейнера под атмосферу фона
+                    const flashSaleEl = document.getElementById('flash-sale');
+                    if (flashSaleEl) {
+                        if (currentBg === 'forest') flashSaleEl.style.background = 'linear-gradient(to bottom, #111827, #064e3b)';
+                        if (currentBg === 'city') flashSaleEl.style.background = 'linear-gradient(to bottom, #090d16, #1e1b4b)';
+                        if (currentBg === 'mountains') flashSaleEl.style.background = 'linear-gradient(to bottom, #020617, #312e81)';
+                        if (currentBg === 'sea') flashSaleEl.style.background = 'linear-gradient(to bottom, #083344, #0369a1)';
+                    }
+                }
+
+                // --- ГЕНЕРАЦИЯ ЗАДНЕГО ПЛАНА (ОБОЕВ) ---
+                if (Math.random() < 0.02) {
+                    if (currentBg === 'forest') {
+                        bgDecorations.push({ x: canvas.width + 30, y: canvas.height - 20, symbol: Math.random() > 0.5 ? '🌲' : '🌳', speed: 0.4 });
+                    } else if (currentBg === 'city') {
+                        bgDecorations.push({ x: canvas.width + 40, y: canvas.height - 20, symbol: Math.random() > 0.5 ? '🏢' : '🌆', speed: 0.3 });
+                    } else if (currentBg === 'mountains') {
+                        bgDecorations.push({ x: canvas.width + 50, y: canvas.height - 20, symbol: '🏔️', speed: 0.2 });
+                    }
+                }
+
+                // Особая генерация выпрыгивающих акул для МОРЯ
+                if (currentBg === 'sea' && Math.random() < 0.015) {
+                    bgDecorations.push({
+                        x: canvas.width + 20,
+                        y: canvas.height - 15,
+                        vy: -7 - Math.random() * 3, // Скорость прыжка вверх
+                        gravity: 0.3,
+                        symbol: '🦈',
+                        speed: 0.6 // Движутся чуть быстрее гор
+                    });
+                }
+
+                // Обновляем движение декораций фона
+                bgDecorations.forEach((dec, idx) => {
+                    dec.x -= gameSpeed * dec.speed;
+                    if (dec.vy !== undefined) { // Физика полета акулы
+                        dec.vy += dec.gravity;
+                        dec.y += dec.vy;
+                    }
+                    if (dec.x < -100 || dec.y > canvas.height + 50) bgDecorations.splice(idx, 1);
+                });
+
+                // --- ИНТЕЛЛЕКТ ULTRA BOSS (АВТОПИЛОТ) ---
+                objects.forEach(obj => {
+                    const triggerDist = gameSpeed * 28;
+
+                    if (obj.x > dino.x && obj.x < dino.x + triggerDist) {
+                        if (obj.type === 'cactus') {
+                            if (!dino.jumping) {
+                                dino.vy = dino.jumpPower;
+                                dino.jumping = true;
+                            }
+                        }
+                        if (obj.type === 'bird') {
+                            if (!dino.hasWeapon && !dino.jumping) {
+                                dino.vy = dino.jumpPower;
+                                dino.jumping = true;
+                            }
+                        }
+                    }
+                });
+
+                // Физика прыжка
                 dino.vy += dino.gravity;
                 dino.y += dino.vy;
                 if (dino.y > canvas.height - 40) {
@@ -572,13 +651,14 @@
                             obj.symbol = '😵';
                             obj.vy = 5;
                             score += 500;
+                            statusEl.innerText = "PTERO SHOCKED!";
                         } else {
                             if (dino.hasArmor) {
                                 dino.hasArmor = false;
                                 invEl.innerHTML = dino.hasWeapon ? '<span>⚡</span>' : '';
                                 statusEl.innerText = "SHIELD BROKEN";
                                 objects.splice(index, 1);
-                            } else {
+                            } else if (obj.type !== 'bird' || !dino.hasWeapon) {
                                 gameOver();
                             }
                         }
@@ -594,16 +674,51 @@
 
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                ctx.beginPath(); ctx.moveTo(0, canvas.height-10); ctx.lineTo(canvas.width, canvas.height-10); ctx.stroke();
 
-                ctx.font = '24px serif';
-                ctx.fillText(dino.symbol, dino.x, dino.y + 20);
-                if (dino.hasArmor) {
-                    ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2;
-                    ctx.strokeRect(dino.x - 2, dino.y - 2, dino.w + 4, dino.h + 4);
+                // 1. Рисуем декорации ЗАДНЕГО ПЛАНА (обои)
+                bgDecorations.forEach(dec => {
+                    ctx.font = dec.symbol === '🦈' ? '24px serif' : '20px serif';
+                    ctx.fillText(dec.symbol, dec.x, dec.y + (dec.vy !== undefined ? 0 : 5));
+                });
+
+                // 2. Пол/Линия воды
+                if (currentBg === 'sea') {
+                    // Рисуем синие волны
+                    ctx.strokeStyle = '#22d3ee';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    for (let i = 0; i < canvas.width; i += 15) {
+                        const waveY = (canvas.height - 15) + Math.sin((i + frame) * 0.05) * 3;
+                        if (i === 0) ctx.moveTo(i, waveY);
+                        else ctx.lineTo(i, waveY);
+                    }
+                    ctx.stroke();
+                } else {
+                    // Обычная серая земля
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(0, canvas.height-10); ctx.lineTo(canvas.width, canvas.height-10); ctx.stroke();
                 }
 
+                // 3. Динозавр (и лодка, если на море)
+                ctx.font = '24px serif';
+                if (currentBg === 'sea') {
+                    // Если море — рисуем под ним лодочку
+                    ctx.fillText('🛶', dino.x - 3, dino.y + 24);
+                    // Сам динозавр сидит внутри лодки чуть приподнятым
+                    ctx.fillText(dino.symbol, dino.x, dino.y + 11);
+                } else {
+                    // Обычный бег
+                    ctx.fillText(dino.symbol, dino.x, dino.y + 20);
+                }
+
+                // Щит брони вокруг Дино
+                if (dino.hasArmor) {
+                    ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2;
+                    ctx.strokeRect(dino.x - 4, dino.y - 12, dino.w + 8, dino.h + 8);
+                }
+
+                // 4. Опасные объекты (препятствия и лут)
                 objects.forEach(obj => {
                     ctx.font = '20px serif';
                     ctx.fillText(obj.symbol, obj.x, obj.y + 20);
@@ -612,15 +727,17 @@
 
             function gameOver() {
                 gameActive = false;
-                statusEl.innerText = "GAME OVER";
-                const overlay = document.getElementById('game-start-overlay');
-                overlay.style.display = 'flex';
-                overlay.style.opacity = '1';
-                overlay.innerHTML = `<span class="text-2xl">💀</span><span class="font-bold">SCORE: ${Math.floor(score/10)}</span><span class="text-[10px] mt-2">TAP TO RESTART</span>`;
+                statusEl.innerText = "REBOOTING I.I...";
+                setTimeout(() => {
+                    invEl.innerHTML = '';
+                    statusEl.innerText = "READY TO BOSS";
+                    bgDecorations = [];
+                    initDinoGame();
+                }, 1000);
             }
 
             const handleJump = (e) => {
-                if (!dino.jumping) {
+                if (!dino.jumping && currentBg !== 'sea') { // На море лодка не прыгает, плывем плавно!
                     dino.vy = dino.jumpPower;
                     dino.jumping = true;
                 }
@@ -629,7 +746,7 @@
             window.addEventListener('mousedown', handleJump);
 
             update();
-        }           
+                            }
                   
                 // Улучшенный парсер: ИГНОРИРУЕТ ПУСТЫЕ СТРОКИ С ЗАПЯТЫМИ СНИЗУ ТАБЛИЦЫ
         function parseGoogleCSV(rawText) {
