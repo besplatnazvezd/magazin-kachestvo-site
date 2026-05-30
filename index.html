@@ -485,7 +485,48 @@
             }
             banner.innerText = `${text}`;
         }
+        // Умный таймер: запоминает время даже после выхода из бота
+        function runPromoCountdown() {
+            const countdownEl = document.getElementById('countdown');
+            if (!countdownEl) return;
 
+            const duration = 12 * 60 * 60 * 1000; // Цикл 12 часов
+
+            function updateTimer() {
+                const now = Date.now();
+                let endTime = localStorage.getItem('promo_end_time');
+
+                // Если таймера нет в памяти или время вышло — создаем новую метку на +12 часов
+                if (!endTime || now >= parseInt(endTime)) {
+                    endTime = now + duration;
+                    localStorage.setItem('promo_end_time', endTime);
+                } else {
+                    endTime = parseInt(endTime);
+                }
+
+                const timeLeft = endTime - now;
+
+                if (timeLeft <= 0) {
+                    countdownEl.innerText = "00:00:00";
+                    localStorage.removeItem('promo_end_time');
+                    return;
+                }
+
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                const fH = hours.toString().padStart(2, '0');
+                const fM = minutes.toString().padStart(2, '0');
+                const fS = seconds.toString().padStart(2, '0');
+
+                countdownEl.innerText = `${fH}:${fM}:${fS}`;
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+                        }
+                    
                 // Улучшенный парсер: ИГНОРИРУЕТ ПУСТЫЕ СТРОКИ С ЗАПЯТЫМИ СНИЗУ ТАБЛИЦЫ
         function parseGoogleCSV(rawText) {
             const lines = rawText.split('\n');
