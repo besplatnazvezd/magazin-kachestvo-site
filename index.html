@@ -183,17 +183,22 @@
         <!-- ВКЛАДКА 1: SHOP (МАГАЗИН) -->
         <div id="tab-shop" class="tab-view space-y-6 py-4">
             
-            <!-- 17. FLASH SALES ТАЙМЕР -->
-          <div id="flash-sale" class="bg-indigo-600 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg">
-                <div class="relative z-10 flex justify-between items-center">
-                    <div>
-                        <h3 class="font-black italic text-xl tracking-tight">ВРЕМЯ ПИТЕР/МСК:</h3>
-                        <p id="sale-status" class="text-[9px] font-bold uppercase tracking-wider opacity-75"></p>
+                        <!-- ИГРОВАЯ ЗОНА: DINO BOSS -->
+            <div id="flash-sale" class="relative bg-indigo-900 rounded-[2rem] h-40 overflow-hidden shadow-lg border-2 border-indigo-500 select-none touch-none">
+                <canvas id="dinoGame" class="w-full h-full"></canvas>
+                <div id="game-ui" class="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
+                    <div class="bg-black/40 backdrop-blur-sm p-2 rounded-lg text-[10px] text-white font-bold leading-tight">
+                        SCORE: <span id="game-score">0</span><br>
+                        <span id="dino-status" class="text-yellow-400">READY TO BOSS</span>
                     </div>
-                    <div id="countdown" class="text-2xl font-black timer-glow tabular-nums">00:00:000</div>
+                    <div id="inventory" class="flex gap-1 text-lg">
+                        <!-- Сюда будут падать иконки брони и оружия -->
+                    </div>
                 </div>
-                <div class="absolute -right-6 -bottom-6 opacity-10">
-                    <i data-lucide="zap" class="w-24 h-24"></i>
+                <div id="game-start-overlay" onclick="startGame()" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white cursor-pointer transition-opacity">
+                    <span class="text-3xl mb-2">🦖</span>
+                    <span class="font-black italic tracking-tighter text-sm uppercase">TAP TO START DINO BOSS</span>
+                    <span class="text-[8px] opacity-60 mt-1 uppercase">Прыгай, собирай лут, бей птеродактилей!</span>
                 </div>
             </div>
 
@@ -437,10 +442,11 @@
         let logoTaps = 0;
         let tapTimer = null;
 
-                async function initializeApp() {
+                 
+        async function initializeApp() {
             lucide.createIcons();
             
-            let avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${appState.username}`; // Красивый аватар по умолчанию
+            let avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${appState.username}`; 
 
             if (window.Telegram && window.Telegram.WebApp) {
                 const tgWebApp = window.Telegram.WebApp;
@@ -450,7 +456,6 @@
                     appState.userId = tgUser.id.toString();
                     appState.username = tgUser.username || tgUser.first_name || "Guest";
                     
-                    // Если у пользователя открыта аватарка в Telegram, берем её
                     if (tgUser.photo_url) {
                         avatarUrl = tgUser.photo_url;
                     }
@@ -464,12 +469,13 @@
 
             document.getElementById('user-display-name').innerText = appState.username;
             document.getElementById('client-tg-id').innerText = appState.userId;
-            document.getElementById('user-avatar').src = avatarUrl; // Устанавливаем аватарку
+            
+            const avatarElem = document.getElementById('user-avatar');
+            if (avatarElem) avatarElem.src = avatarUrl;
             
             applyGreeting();
-            runPromoCountdown();
             await fetchProductsFromSheet();
-                }
+        }
 
         // Приветствие по времени суток (8)
         function applyGreeting() {
@@ -483,49 +489,147 @@
             } else if (hours >= 23 || hours < 6) {
                 text = "Доброй ночи,";
             }
-            banner.innerText = `${text}`;
+            if (banner) banner.innerText = `${text}`;
         }
-                             // Профессиональный таймер: обратный отсчёт до конца дня по МСК (Питер)
-        function runPromoCountdown() {
-            const countdownEl = document.getElementById('countdown');
-            if (!countdownEl) return;
 
-            function updateTimer() {
-                const now = new Date();
-                
-                // Вычисляем смещение для Москвы (UTC+3)
-                const mskOffset = 3 * 60 * 60 * 1000; 
-                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                const mskNow = new Date(utc + mskOffset);
+        let gameActive = false;
+        function startGame() {
+            if (gameActive) return;
+            document.getElementById('game-start-overlay').style.opacity = '0';
+            setTimeout(() => { document.getElementById('game-start-overlay').style.display = 'none'; }, 300);
+            initDinoGame();
+        }
 
-                // Устанавливаем цель: Конец сегодняшнего дня (23:59:59.999) по МСК
-                const mskEndDay = new Date(mskNow);
-                mskEndDay.setHours(23, 59, 59, 999);
+        function initDinoGame() {
+            gameActive = true;
+            const canvas = document.getElementById('dinoGame');
+            const ctx = canvas.getContext('2d');
+            const scoreEl = document.getElementById('game-score');
+            const statusEl = document.getElementById('dino-status');
+            const invEl = document.getElementById('inventory');
 
-                const diff = mskEndDay - mskNow;
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
 
-                if (diff <= 0) {
-                    countdownEl.innerText = "00:00:00:000";
-                    return;
+            let score = 0;
+            let gameSpeed = 3;
+            let frame = 0;
+
+            const dino = {
+                x: 30, y: canvas.height - 40, w: 30, h: 30,
+                vy: 0, gravity: 0.6, jumpPower: -10,
+                jumping: false, hasArmor: false, hasWeapon: false,
+                symbol: '🦖'
+            };
+
+            let objects = [];
+
+            function spawnObject() {
+                const rand = Math.random();
+                if (rand < 0.02) {
+                    objects.push({ x: canvas.width, y: canvas.height - 35, w: 20, h: 25, type: 'cactus', symbol: '🌵' });
+                } else if (rand < 0.025) {
+                    objects.push({ x: canvas.width, y: canvas.height - 70, w: 25, h: 20, type: 'bird', symbol: '🦅' });
+                } else if (rand < 0.028) {
+                    objects.push({ x: canvas.width, y: canvas.height - 60, w: 20, h: 20, type: 'loot_armor', symbol: '🛡️' });
+                } else if (rand < 0.030) {
+                    objects.push({ x: canvas.width, y: canvas.height - 60, w: 20, h: 20, type: 'loot_weapon', symbol: '⚡' });
                 }
-
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                const ms = Math.floor(diff % 1000);
-
-                const fH = hours.toString().padStart(2, '0');
-                const fM = minutes.toString().padStart(2, '0');
-                const fS = seconds.toString().padStart(2, '0');
-                const fMs = ms.toString().padStart(3, '0');
-
-                // Выводим результат с красивыми миллисекундами
-                countdownEl.innerHTML = `${fH}:${fM}:${fS}<span style="font-size: 0.7em; opacity: 0.8; margin-left: 2px;">:${fMs}</span>`;
             }
 
-            // Обновляем каждые 40 миллисекунд для супер-плавного бега цифр
-            setInterval(updateTimer, 40);
-        }
+            function update() {
+                if (!gameActive) return;
+                frame++;
+                score++;
+                if (frame % 10 === 0) scoreEl.innerText = Math.floor(score / 10);
+                if (frame % 500 === 0) gameSpeed += 0.5;
+
+                dino.vy += dino.gravity;
+                dino.y += dino.vy;
+                if (dino.y > canvas.height - 40) {
+                    dino.y = canvas.height - 40;
+                    dino.vy = 0;
+                    dino.jumping = false;
+                }
+
+                spawnObject();
+
+                objects.forEach((obj, index) => {
+                    obj.x -= gameSpeed;
+
+                    if (dino.x < obj.x + obj.w && dino.x + dino.w > obj.x && dino.y < obj.y + obj.h && dino.y + dino.h > obj.y) {
+                        if (obj.type === 'loot_armor') {
+                            dino.hasArmor = true;
+                            invEl.innerHTML += '<span>🛡️</span>';
+                            statusEl.innerText = "ARMORED BOSS";
+                            objects.splice(index, 1);
+                        } else if (obj.type === 'loot_weapon') {
+                            dino.hasWeapon = true;
+                            invEl.innerHTML += '<span>⚡</span>';
+                            statusEl.innerText = "ELECTRO BOSS";
+                            objects.splice(index, 1);
+                        } else if (obj.type === 'bird' && dino.hasWeapon) {
+                            obj.symbol = '😵';
+                            obj.vy = 5;
+                            score += 500;
+                        } else {
+                            if (dino.hasArmor) {
+                                dino.hasArmor = false;
+                                invEl.innerHTML = dino.hasWeapon ? '<span>⚡</span>' : '';
+                                statusEl.innerText = "SHIELD BROKEN";
+                                objects.splice(index, 1);
+                            } else {
+                                gameOver();
+                            }
+                        }
+                    }
+
+                    if (obj.vy) obj.y += obj.vy;
+                    if (obj.x < -50) objects.splice(index, 1);
+                });
+
+                draw();
+                requestAnimationFrame(update);
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath(); ctx.moveTo(0, canvas.height-10); ctx.lineTo(canvas.width, canvas.height-10); ctx.stroke();
+
+                ctx.font = '24px serif';
+                ctx.fillText(dino.symbol, dino.x, dino.y + 20);
+                if (dino.hasArmor) {
+                    ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2;
+                    ctx.strokeRect(dino.x - 2, dino.y - 2, dino.w + 4, dino.h + 4);
+                }
+
+                objects.forEach(obj => {
+                    ctx.font = '20px serif';
+                    ctx.fillText(obj.symbol, obj.x, obj.y + 20);
+                });
+            }
+
+            function gameOver() {
+                gameActive = false;
+                statusEl.innerText = "GAME OVER";
+                const overlay = document.getElementById('game-start-overlay');
+                overlay.style.display = 'flex';
+                overlay.style.opacity = '1';
+                overlay.innerHTML = `<span class="text-2xl">💀</span><span class="font-bold">SCORE: ${Math.floor(score/10)}</span><span class="text-[10px] mt-2">TAP TO RESTART</span>`;
+            }
+
+            const handleJump = (e) => {
+                if (!dino.jumping) {
+                    dino.vy = dino.jumpPower;
+                    dino.jumping = true;
+                }
+            };
+            window.addEventListener('touchstart', handleJump);
+            window.addEventListener('mousedown', handleJump);
+
+            update();
+        }           
                   
                 // Улучшенный парсер: ИГНОРИРУЕТ ПУСТЫЕ СТРОКИ С ЗАПЯТЫМИ СНИЗУ ТАБЛИЦЫ
         function parseGoogleCSV(rawText) {
