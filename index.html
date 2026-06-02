@@ -1034,7 +1034,8 @@
             }
         }
 
-                       // 28. Про покупки: отправка боту + реальная оплата
+                       
+        // 28. Оформление покупки (без предварительной отправки в бота)
         async function executeCheckout() {
             if (appState.cart.length === 0) {
                 alert("Корзина пуста");
@@ -1045,44 +1046,40 @@
                 return;
             }
 
-            // Считаем сумму заказа
             const totalSum = appState.cart.reduce((sum, i) => sum + (i.singlePrice * i.qty), 0);
-            
-            // Формируем список товаров для админа
-            const itemsListFormatted = appState.cart.map(item => 
-                `• ${item.product.name}\n  Количество: ${item.qty} шт.\n  Данные/Пожелания: ${item.comment || 'Не указаны'}`
-            ).join('\n\n');
 
-            const messageForAdmin = `🛍️ НОВЫЙ ЗАКАЗ [${appState.selectedPaymentGate.toUpperCase()}]\n\n👤 Пользователь: @${appState.username}\n🆔 ID Клиента: ${appState.userId}\n\n📦 СОСТАВ ЗАКАЗА:\n${itemsListFormatted}\n\n💰 К ОПЛАТЕ: ${totalSum.toFixed(2)} ₽`;
-
-            // Отправляем уведомление тебе в бота
-            await sendTelegramRequest(messageForAdmin, APP_CONFIG.ADMIN_CHAT_ID);
-
-            // --- ЛОГИКА ПЛАТЕЖНЫХ ШЛЮЗОВ ---
+            // Форматируем массив товаров для передачи серверу
+            const itemsForBackend = appState.cart.map(item => ({
+                name: item.product.name,
+                qty: item.qty,
+                comment: item.comment || ''
+            }));
 
             if (appState.selectedPaymentGate === 'CryptoBot') {
                 alert(`Заказ оформлен! Перенаправление на оплату через CryptoBot.`);
 
                 try {
-                    // Вызов твоего бэкэнда на Vercel
+                    // Отправляем расширенные данные на Vercel
                     const response = await fetch('https://hhh-dear.vercel.app/api/create-invoice', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             amount: totalSum,
-                            description: `Оплата заказа для @${appState.username}`
+                            userId: appState.userId,
+                            username: appState.username,
+                            items: itemsForBackend
                         })
                     });
 
                     const data = await response.json();
 
                     if (data.pay_url) {
-                        // Очищаем корзину только при УСПЕШНОМ создании счета
+                        // Очищаем корзину
                         appState.cart = [];
                         syncCartBadge();
                         closeCartModal();
 
-                        // Открываем оплату в Telegram
+                        // Перенаправляем на оплату
                         if (window.Telegram && window.Telegram.WebApp) {
                             window.Telegram.WebApp.openLink(data.pay_url);
                         } else {
@@ -1098,15 +1095,12 @@
 
             } else if (appState.selectedPaymentGate === 'YooKassa') {
                 alert("ЮKassa будет подключена после завершения регистрации самозанятости!");
-                
-                // Очищаем корзину
                 appState.cart = [];
                 syncCartBadge();
                 closeCartModal();
-                
                 window.location.href = "https://yookassa.ru";
             }
-        }
+                            }
 
         // 23. Кнопка «Уведомить о наличии»
         async function requestStockNotify() {
