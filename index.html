@@ -286,6 +286,16 @@
                 <div class="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] border border-gray-200 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
     <p class="italic mb-2">"Все заказы и цифровые услуги передаются покупателю через администратора <span class="text-indigo-500 font-bold">@nmproda</span>."</p>
     <p>Работа начинается сразу <span class="text-zinc-900 dark:text-white font-bold">после подтверждения оплаты</span>. Заказ будет выдан по готовности на ваши данные, которые вы указали в комментариях при оформлении. Ориентировочные сроки выполнения указаны в описании каждого конкретного товара.</p>
+                                    <!-- Блок реквизитов и контактов для ЮKassa -->
+                <div class="mt-4 pt-4 border-t border-[var(--border-color)] space-y-2 text-left">
+                    <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Реквизиты и контакты:</p>
+                    <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        <strong>Исполнитель:</strong> Самозанятый представитель BOSS STORE<br>
+                        <strong>ИНН:</strong> 182202602527<br> <!-- Впиши сюда свой ИНН или ИНН родителей -->
+                        <strong>Telegram для связи:</strong> <a href="https://t.me/nmproda" target="_blank" class="text-indigo-400 font-bold hover:underline">@nmproda</a><br>
+                        <strong>Email:</strong> support@boss-store.ru
+                    </p>
+                </div>
                 </div>
             </div>
         </div>
@@ -453,24 +463,28 @@
             
             let avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${appState.username}`; 
 
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tgWebApp = window.Telegram.WebApp;
-                tgWebApp.expand();
-                if (tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
-                    const tgUser = tgWebApp.initDataUnsafe.user;
-                    appState.userId = tgUser.id.toString();
-                    appState.username = tgUser.username || tgUser.first_name || "Guest";
-                    
-                    if (tgUser.photo_url) {
-                        avatarUrl = tgUser.photo_url;
-                    }
+                    if (window.Telegram && window.Telegram.WebApp) {
+            const tgWebApp = window.Telegram.WebApp;
+            tgWebApp.expand();
+            if (tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
+                const tgUser = tgWebApp.initDataUnsafe.user;
+                appState.userId = tgUser.id.toString();
+                appState.username = tgUser.username || tgUser.first_name;
 
-                    if (!localStorage.getItem(`new_user_welcomed_${appState.userId}`)) {
-                        sendWelcomeNotification(appState.username, appState.userId);
-                        localStorage.setItem(`new_user_welcomed_${appState.userId}`, "true");
-                    }
+                if (tgUser.photo_url) {
+                    avatarUrl = tgUser.photo_url;
+                }
+
+                if (!localStorage.getItem(`new_user_welcomed_${tgUser.id}`)) {
+                    sendWelcomeNotification(appState.username, appState.userId);
+                    localStorage.setItem(`new_user_welcomed_${tgUser.id}`, 'true');
                 }
             }
+        } else {
+            // Если открыто в обычном браузере — подставляем красивые демо-данные для ЮKassa!
+            appState.userId = "123456789";
+            appState.username = "ГОСТЬ";
+                    }
 
             document.getElementById('user-display-name').innerText = appState.username;
             document.getElementById('client-tg-id').innerText = appState.userId;
